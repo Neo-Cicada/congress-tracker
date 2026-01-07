@@ -1,282 +1,151 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
+import { 
+  TrendingUp, 
+  Activity, 
+  ShieldCheck, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Search,
+  LayoutGrid,
+  List,
+  ChevronRight,
+  Sun,
+  Moon
+} from 'lucide-react';
 
-type Trade = {
-  _id: string;
-  politicianName: string;
-  chamber: 'House' | 'Senate';
-  party?: string;
-  ticker: string;
-  assetName?: string;
-  transactionType: 'Buy' | 'Sell' | 'Unknown';
-  amountRange?: string;
-  transactionDate?: string;
-  filedDate?: string;
-  sourceUrl?: string;
-};
+const TRADES = [
+  { id: '1', name: 'Nancy Pelosi', party: 'D', ticker: 'NVDA', type: 'Buy', amount: '$1M+', date: '2h ago', reliability: 98 },
+  { id: '2', name: 'Tommy Tuberville', party: 'R', ticker: 'XOM', type: 'Sell', amount: '$50K', date: '5h ago', reliability: 85 },
+  { id: '3', name: 'Josh Gottheimer', party: 'D', ticker: 'MSFT', type: 'Buy', amount: '$250K', date: '1d ago', reliability: 92 },
+];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+export default function NexusDashboard() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-function formatDate(s?: string) {
-  if (!s) return '—';
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
-}
+  // Prevent hydration mismatch
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
-function partyBadge(party?: string) {
-  if (!party) return { label: '—' };
-  const p = party.toLowerCase();
-  if (p.startsWith('d')) return { label: 'D' };
-  if (p.startsWith('r')) return { label: 'R' };
-  if (p.includes('ind')) return { label: 'I' };
-  return { label: party };
-}
-
-export default function HomePage() {
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // filters
-  const [ticker, setTicker] = useState('');
-  const [politician, setPolitician] = useState('');
-  const [type, setType] = useState<'All' | 'Buy' | 'Sell' | 'Unknown'>('All');
-  const [chamber, setChamber] = useState<'All' | 'House' | 'Senate'>('All');
-
-  const [limit, setLimit] = useState(50);
-
-  const queryString = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set('limit', String(limit));
-
-    if (ticker.trim()) params.set('ticker', ticker.trim().toUpperCase());
-    if (politician.trim()) params.set('politician', politician.trim());
-    if (type !== 'All') params.set('type', type);
-    if (chamber !== 'All') params.set('chamber', chamber);
-
-    return params.toString();
-  }, [ticker, politician, type, chamber, limit]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const res = await fetch(`${API_BASE}/api/trades?${queryString}`, {
-          cache: 'no-store'
-        });
-
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        const data = await res.json();
-
-        if (!cancelled) setTrades(data.trades ?? []);
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message ?? 'Failed to load trades');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    if (!API_BASE) {
-      setError('Missing NEXT_PUBLIC_API_BASE_URL in .env.local');
-      setLoading(false);
-      return;
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [queryString]);
+  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Congress Trades Tracker
-          </h1>
-          <p className="mt-2 text-zinc-400">
-            Track publicly disclosed stock trades by members of the U.S. Congress.
-          </p>
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] text-zinc-900 dark:text-zinc-200 font-sans transition-colors duration-300">
+      {/* --- BLURRY BACKGROUND ACCENTS --- */}
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-600/5 dark:bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+      {/* --- SIDEBAR NAV --- */}
+      <aside className="fixed left-0 top-0 h-full w-20 border-r border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-black/40 backdrop-blur-md hidden lg:flex flex-col items-center py-8 gap-10 z-50">
+        <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <TrendingUp size={24} className="text-white" />
+        </div>
+        <nav className="flex flex-col gap-8 text-zinc-500">
+          <Activity className="hover:text-cyan-500 cursor-pointer transition-colors" />
+          <ShieldCheck className="hover:text-cyan-500 cursor-pointer transition-colors" />
+          
+          {/* Theme Toggle */}
+          <button 
+            onClick={toggleTheme}
+            className="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all text-zinc-600 dark:text-zinc-400"
+          >
+            {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </nav>
+      </aside>
+
+      <main className="lg:ml-20 p-6 lg:p-12 relative">
+        {/* --- TOP HEADER --- */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2">Nexus Alpha</h1>
+            <p className="text-zinc-500 text-sm font-medium uppercase tracking-[0.2em]">Institutional Transparency Protocol</p>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white dark:bg-zinc-900/50 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-800/50 backdrop-blur-sm shadow-sm dark:shadow-none">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-zinc-100 dark:bg-zinc-800 text-cyan-500 shadow-inner' : 'text-zinc-400'}`}
+            >
+              <LayoutGrid size={20} />
+            </button>
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-zinc-100 dark:bg-zinc-800 text-cyan-500 shadow-inner' : 'text-zinc-400'}`}
+            >
+              <List size={20} />
+            </button>
+          </div>
         </header>
 
-        {/* Filters */}
-        <section className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-          <div className="grid gap-3 md:grid-cols-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-zinc-300">Ticker</label>
-              <input
-                className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none focus:border-zinc-600"
-                placeholder="e.g. NVDA"
-                value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
-              />
-            </div>
+        {/* --- SEARCH BAR --- */}
+        <div className="relative max-w-2xl mb-12 group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within:text-cyan-500 transition-colors" size={20} />
+          <input 
+            type="text" 
+            placeholder="Search politicians, tickers, or parties..."
+            className="w-full bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/50 py-4 pl-14 pr-6 rounded-2xl outline-none focus:border-cyan-500/50 focus:ring-4 ring-cyan-500/5 transition-all text-lg placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm dark:shadow-none"
+          />
+        </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-zinc-300">Politician</label>
-              <input
-                className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none focus:border-zinc-600"
-                placeholder="e.g. Pelosi"
-                value={politician}
-                onChange={(e) => setPolitician(e.target.value)}
-              />
-            </div>
+        {/* --- MAIN CONTENT BENTO --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {TRADES.map((trade) => (
+            <div 
+              key={trade.id} 
+              className="group bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 hover:border-cyan-500/30 rounded-[2rem] p-6 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5"
+            >
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${trade.party === 'D' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                    {trade.party}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-zinc-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">{trade.name}</h3>
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono tracking-tighter uppercase">{trade.date}</p>
+                  </div>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${trade.type === 'Buy' ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400' : 'border-rose-500/20 bg-rose-500/5 text-rose-600 dark:text-rose-400'}`}>
+                  {trade.type}
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-zinc-300">Type</label>
-              <select
-                className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none focus:border-zinc-600"
-                value={type}
-                onChange={(e) => setType(e.target.value as any)}
-              >
-                <option value="All">All</option>
-                <option value="Buy">Buy</option>
-                <option value="Sell">Sell</option>
-                <option value="Unknown">Unknown</option>
-              </select>
-            </div>
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold tracking-widest mb-1">Asset Class</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter italic">{trade.ticker}</span>
+                    {trade.type === 'Buy' ? <ArrowUpRight className="text-emerald-500" /> : <ArrowDownRight className="text-rose-500" />}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold tracking-widest mb-1">Estimated Value</p>
+                  <span className="text-xl font-mono font-bold text-zinc-700 dark:text-zinc-100">{trade.amount}</span>
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-zinc-300">Chamber</label>
-              <select
-                className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none focus:border-zinc-600"
-                value={chamber}
-                onChange={(e) => setChamber(e.target.value as any)}
-              >
-                <option value="All">All</option>
-                <option value="House">House</option>
-                <option value="Senate">Senate</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm text-zinc-400">
-              Showing <span className="text-zinc-200">{Math.min(trades.length, limit)}</span> trades
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-zinc-300">Limit</label>
-              <select
-                className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-600"
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value, 10))}
-              >
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={200}>200</option>
-              </select>
-              <button
-                className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm hover:bg-zinc-900"
-                onClick={() => {
-                  setTicker('');
-                  setPolitician('');
-                  setType('All');
-                  setChamber('All');
-                }}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Content */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-            <h2 className="text-base font-medium">Latest Disclosed Trades</h2>
-            <span className="text-xs text-zinc-400">
-              Source: public disclosure filings
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="p-6 text-zinc-400">Loading…</div>
-          ) : error ? (
-            <div className="p-6 text-red-300">
-              {error}
-              <div className="mt-2 text-sm text-zinc-400">
-                Tip: confirm backend is running and CORS allows your frontend.
+              <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase">Reliability Score: {trade.reliability}%</span>
+                </div>
+                <button className="flex items-center gap-1 text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest hover:gap-2 transition-all">
+                  Deep Dive <ChevronRight size={14} />
+                </button>
               </div>
             </div>
-          ) : trades.length === 0 ? (
-            <div className="p-6 text-zinc-400">No trades found for your filters.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead className="bg-zinc-950/40 text-zinc-300">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium">Member</th>
-                    <th className="px-4 py-3 text-left font-medium">Ch.</th>
-                    <th className="px-4 py-3 text-left font-medium">Party</th>
-                    <th className="px-4 py-3 text-left font-medium">Ticker</th>
-                    <th className="px-4 py-3 text-left font-medium">Type</th>
-                    <th className="px-4 py-3 text-left font-medium">Amount</th>
-                    <th className="px-4 py-3 text-left font-medium">Trade Date</th>
-                    <th className="px-4 py-3 text-left font-medium">Filed</th>
-                    <th className="px-4 py-3 text-left font-medium">Source</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {trades.map((t) => {
-                    const badge = partyBadge(t.party);
-                    return (
-                      <tr
-                        key={t._id}
-                        className="border-t border-zinc-800 hover:bg-zinc-950/30"
-                      >
-                        <td className="px-4 py-3">{t.politicianName}</td>
-                        <td className="px-4 py-3 text-zinc-300">{t.chamber}</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center rounded-full border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-200">
-                            {badge.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 font-medium">{t.ticker}</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center rounded-full border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs">
-                            {t.transactionType}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-zinc-300">{t.amountRange ?? '—'}</td>
-                        <td className="px-4 py-3 text-zinc-300">{formatDate(t.transactionDate)}</td>
-                        <td className="px-4 py-3 text-zinc-300">{formatDate(t.filedDate)}</td>
-                        <td className="px-4 py-3">
-                          {t.sourceUrl ? (
-                            <a
-                              className="text-zinc-200 underline decoration-zinc-700 underline-offset-4 hover:text-white"
-                              href={t.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Open
-                            </a>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+          ))}
+        </div>
 
-        <footer className="mt-6 text-xs text-zinc-500">
-          Disclaimer: informational only, not investment advice.
+        {/* --- FOOTER CTA --- */}
+        <footer className="mt-20 py-12 border-t border-zinc-200 dark:border-zinc-900 flex flex-col items-center gap-4">
+          <p className="text-zinc-500 text-xs tracking-widest uppercase text-center font-medium">Nexus Protocol © 2026 • Encrypted Data Stream</p>
         </footer>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
