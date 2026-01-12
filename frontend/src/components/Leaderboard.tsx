@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Crown, TrendingUp, User, ChevronRight } from "lucide-react";
 
 interface LeaderboardEntry {
@@ -89,9 +90,10 @@ export const Leaderboard = () => {
       {/* LEADERS LIST */}
       <div className="space-y-8">
         {LEADERS.map((leader) => (
-          <div
+          <Link
+            href={`/politician/${leader.rank}`} // Mock ID for now
             key={leader.rank}
-            className="relative flex items-center justify-between group/row cursor-pointer"
+            className="relative flex items-center justify-between group/row cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5 p-4 rounded-2xl transition-all"
           >
             <div className="flex items-center gap-4">
               {/* RANK INDICATOR */}
@@ -142,7 +144,7 @@ export const Leaderboard = () => {
                 />
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
