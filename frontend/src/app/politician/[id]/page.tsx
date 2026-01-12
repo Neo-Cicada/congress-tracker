@@ -2,10 +2,10 @@
 
 import React, { use } from "react";
 import { Sidebar } from "../../../components/Sidebar";
+import { MobileNavbar } from "../../../components/MobileNavbar";
 import { PoliticianHeader } from "../../../components/PoliticianHeader";
 import { PortfolioChart } from "../../../components/PortfolioChart";
 import { TradeCard, Trade } from "../../../components/TradeCard";
-import { useTheme } from "next-themes";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -47,7 +47,6 @@ const MOCK_TRADES: Trade[] = [
 export default function PoliticianPage() {
     // In Next.js 15/16, params is a Promise or can be unwrapped with React.use()
     const params = useParams();
-    const { resolvedTheme, setTheme } = useTheme();
     
     // In a real app, fetch data based on params.id
     // For now, we mock it based on ID or fallback
@@ -56,10 +55,8 @@ export default function PoliticianPage() {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] text-zinc-900 dark:text-zinc-200 font-sans transition-colors duration-300">
-            <Sidebar
-                toggleTheme={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                resolvedTheme={resolvedTheme}
-            />
+            <Sidebar />
+            <MobileNavbar />
 
             <main className="lg:ml-20 p-6 lg:p-12 relative animate-in fade-in duration-500">
                  {/* Back Button */}

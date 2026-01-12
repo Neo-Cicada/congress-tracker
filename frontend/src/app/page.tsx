@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { TradeCard, Trade } from "../components/TradeCard";
 import { Leaderboard } from "../components/Leaderboard";
 import { Sidebar } from "../components/Sidebar";
+import { MobileNavbar } from "../components/MobileNavbar";
 import {
   TrendingUp,
   Activity,
@@ -110,12 +111,8 @@ export default function NexusDashboard() {
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Sidebar */}
-      <Sidebar
-        toggleTheme={() =>
-          setTheme(resolvedTheme === "dark" ? "light" : "dark")
-        }
-        resolvedTheme={resolvedTheme}
-      />
+      <Sidebar />
+      <MobileNavbar />
 
       <main className="lg:ml-20 p-6 lg:p-12 relative">
         {/* Sticky Header */}
