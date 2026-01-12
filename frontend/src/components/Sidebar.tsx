@@ -2,6 +2,7 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   TrendingUp,
   Activity,
@@ -11,19 +12,17 @@ import {
   Moon,
 } from "lucide-react";
 
-interface SidebarProps {
-  toggleTheme: () => void;
-  resolvedTheme?: string;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({
-  toggleTheme,
-  resolvedTheme,
-}) => {
+export const Sidebar = () => {
+  const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
 
   // Helper to check if a link is active
   const isActive = (path: string) => pathname === path;
+
+  // Toggle theme handler
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-full w-20 border-r border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-black/60 backdrop-blur-xl hidden lg:flex flex-col items-center py-8 z-50">
