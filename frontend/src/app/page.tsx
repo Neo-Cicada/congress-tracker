@@ -4,8 +4,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
 import { TradeCard, Trade } from "../components/TradeCard";
 import { Leaderboard } from "../components/Leaderboard";
-import { Sidebar } from "../components/Sidebar";
-import { MobileNavbar } from "../components/MobileNavbar";
 import {
   TrendingUp,
   Activity,
@@ -110,11 +108,7 @@ export default function NexusDashboard() {
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-600/5 dark:bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Sidebar */}
-      <Sidebar />
-      <MobileNavbar />
-
-      <main className="lg:ml-20 p-6 lg:p-12 relative">
+      <main className="p-6 lg:p-12 relative">
         {/* Sticky Header */}
         <header className="sticky top-0 z-40 bg-zinc-50/80 dark:bg-[#050505]/80 backdrop-blur-md pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>

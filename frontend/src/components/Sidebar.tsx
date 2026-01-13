@@ -13,22 +13,26 @@ import {
   Moon,
 } from "lucide-react";
 
-interface SidebarProps {
-  toggleTheme: () => void;
-  resolvedTheme?: string;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({
-  toggleTheme,
-  resolvedTheme,
-}) => {
+export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Helper to check if a link is active
   const isActive = (path: string) => pathname === path;
 
-  return (
-    <aside className="fixed left-0 top-0 h-full w-20 border-r border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-black/60 backdrop-blur-xl hidden lg:flex flex-col items-center py-8 z-50">
+  // Toggle theme handler
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
+
+  // Reusable Sidebar Content
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full items-center py-8">
       {/* Logo */}
       <Link href="/">
         <div className="group cursor-pointer mb-12">
@@ -39,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </Link>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-10 flex-1">
+      <nav className="flex flex-col gap-10 flex-1 w-full px-6 lg:px-0 items-center">
         <SidebarIcon
           icon={<Activity size={22} />}
           label="Live Feed"
@@ -66,14 +70,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={toggleTheme}
           className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-cyan-500 hover:border-cyan-500/30 transition-all duration-300"
         >
-          {resolvedTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          {mounted ? (
+            resolvedTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />
+          ) : (
+             <div className="w-5 h-5" /> // Placeholder to prevent layout shift
+          )}
         </button>
 
         <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center cursor-pointer hover:border-cyan-500/30 transition-all group">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 opacity-80 group-hover:opacity-100 transition-opacity" />
         </div>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* DESKTOP SIDEBAR */}
+      <aside className="fixed left-0 top-0 h-full w-20 border-r border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-black/60 backdrop-blur-xl hidden lg:flex flex-col items-center z-50">
+        <SidebarContent />
+      </aside>
+    </>
   );
 };
 
@@ -83,29 +100,55 @@ const SidebarIcon = ({
   label,
   href,
   active = false,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   href?: string;
   active?: boolean;
+  onClick?: () => void;
 }) => {
   const content = (
-    <div className="group relative cursor-pointer">
+    <div className="group relative cursor-pointer flex items-center lg:block">
       <div
         className={`${
           active ? "text-cyan-500" : "text-zinc-400 dark:text-zinc-600"
-        } group-hover:text-cyan-500 transition-colors`}
+        } group-hover:text-cyan-500 transition-colors mr-4 lg:mr-0`}
       >
         {icon}
       </div>
+
+      {/* Active Indicator (Desktop) */}
       {active && (
-        <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+        <div className="hidden lg:block absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
       )}
-      <span className="absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap uppercase tracking-widest border border-zinc-800 z-50">
+
+      {/* Active Indicator (Mobile) */}
+      {active && (
+        <div className="lg:hidden w-1.5 h-1.5 rounded-full bg-cyan-500 mr-2" />
+      )}
+
+      {/* Label (Desktop - Hover Tooltip) */}
+      <span className="hidden lg:block absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap uppercase tracking-widest border border-zinc-800 z-50">
+        {label}
+      </span>
+
+      {/* Label (Mobile - Inline) */}
+      <span
+        className={`lg:hidden text-lg font-bold uppercase tracking-widest ${
+          active ? "text-zinc-900 dark:text-white" : "text-zinc-400"
+        }`}
+      >
         {label}
       </span>
     </div>
   );
 
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? (
+    <Link href={href} onClick={onClick}>
+      {content}
+    </Link>
+  ) : (
+    <div onClick={onClick}>{content}</div>
+  );
 };
