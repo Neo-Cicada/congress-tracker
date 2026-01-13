@@ -59,8 +59,8 @@ export const Sidebar: React.FC = () => {
         <SidebarIcon
           icon={<LayoutGrid size={22} />}
           label="Leaderboard"
-          href="/#leaderboard"
-          active={isActive("/#leaderboard")} // Simple approximation
+          href="/leaderboard"
+          active={isActive("/leaderboard")} 
         />
       </nav>
 
