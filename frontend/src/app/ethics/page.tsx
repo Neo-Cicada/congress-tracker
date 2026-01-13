@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { Sidebar } from "../../components/Sidebar";
 import {
   EthicsScoreCard,
   ConflictScanner,
@@ -24,15 +23,7 @@ export default function EthicsPage() {
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-rose-600/5 dark:bg-rose-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-amber-600/5 dark:bg-amber-600/10 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Sidebar */}
-      <Sidebar
-        toggleTheme={() =>
-          setTheme(resolvedTheme === "dark" ? "light" : "dark")
-        }
-        resolvedTheme={resolvedTheme}
-      />
-
-      <main className="lg:ml-20 p-6 lg:p-12 relative">
+      <main className="p-6 lg:p-12 relative">
         {/* Header */}
         <header className="mb-12">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2">

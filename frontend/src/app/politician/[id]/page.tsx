@@ -1,8 +1,6 @@
 "use client";
 
 import React, { use } from "react";
-import { Sidebar } from "../../../components/Sidebar";
-import { MobileNavbar } from "../../../components/MobileNavbar";
 import { PoliticianHeader } from "../../../components/PoliticianHeader";
 import { PortfolioChart } from "../../../components/PortfolioChart";
 import { TradeCard, Trade } from "../../../components/TradeCard";
@@ -55,10 +53,7 @@ export default function PoliticianPage() {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] text-zinc-900 dark:text-zinc-200 font-sans transition-colors duration-300">
-            <Sidebar />
-            <MobileNavbar />
-
-            <main className="lg:ml-20 p-6 lg:p-12 relative animate-in fade-in duration-500">
+            <main className="p-6 lg:p-12 relative animate-in fade-in duration-500">
                  {/* Back Button */}
                  <div className="mb-8">
                     <Link href="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-cyan-500 transition-colors bg-white dark:bg-zinc-900/50 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
