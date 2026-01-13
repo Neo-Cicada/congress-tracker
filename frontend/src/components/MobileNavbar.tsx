@@ -62,11 +62,11 @@ export const MobileNavbar = () => {
         )}
       </button>
 
-      <Link href="/#leaderboard">
+      <Link href="/leaderboard">
         <MobileNavIcon
           icon={<LayoutGrid size={24} />}
           label="Leaders"
-          active={isActive("/#leaderboard")} // Simpler active check
+          active={isActive("/leaderboard")}
         />
       </Link>
       {/* Placeholder or another link can go here if needed, for now just balancing */}
