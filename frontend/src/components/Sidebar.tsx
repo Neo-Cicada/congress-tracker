@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Sun,
   Moon,
+  User,
 } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
@@ -62,6 +63,12 @@ export const Sidebar: React.FC = () => {
           href="/leaderboard"
           active={isActive("/leaderboard")} 
         />
+        <SidebarIcon
+          icon={<User size={22} />}
+          label="Profile"
+          href="/profile"
+          active={isActive("/profile")} 
+        />
       </nav>
 
       {/* Bottom Actions */}
@@ -77,9 +84,7 @@ export const Sidebar: React.FC = () => {
           )}
         </button>
 
-        <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center cursor-pointer hover:border-cyan-500/30 transition-all group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 opacity-80 group-hover:opacity-100 transition-opacity" />
-        </div>
+
       </div>
     </div>
   );

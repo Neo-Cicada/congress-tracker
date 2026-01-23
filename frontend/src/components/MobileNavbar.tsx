@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Sun,
   Moon,
+  User,
 } from "lucide-react";
 
 export const MobileNavbar = () => {
@@ -69,8 +70,14 @@ export const MobileNavbar = () => {
           active={isActive("/leaderboard")}
         />
       </Link>
-      {/* Placeholder or another link can go here if needed, for now just balancing */}
-       <div className="w-10" /> 
+      <Link href="/profile">
+        <MobileNavIcon
+          icon={<User size={24} />}
+          label="Profile"
+          active={isActive("/profile")}
+        />
+      </Link>
+
     </nav>
   );
 };
