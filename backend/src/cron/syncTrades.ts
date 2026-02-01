@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { fetchRecentTrades } from '../services/congressAPI';
+import { fetchRecentTrades } from '../services/congressApi';
 import { ingestTrades } from '../services/ingestService';
 
 export const setupTradeSyncCron = (): void => {

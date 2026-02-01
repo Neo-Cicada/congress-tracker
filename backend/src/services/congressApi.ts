@@ -17,32 +17,46 @@ export interface NormalizedTrade {
 }
 
 const api = axios.create({
-  baseURL: process.env.CONGRESS_API_BASE_URL,
+  baseURL: process.env.CONGRESS_API_BASE_URL || 'https://api.quiverquant.com/beta',
   headers: {
-    'X-API-KEY': process.env.CONGRESS_API_KEY || ''
+    'Authorization': `Bearer ${process.env.CONGRESS_API_KEY || ''}`,
+    'Accept': 'application/json'
   },
   timeout: 15000
 });
 
 export const fetchRecentTrades = async (): Promise<NormalizedTrade[]> => {
-  const params = { limit: 200 }; // adjust per provider
+  try {
+    // Quiver API: /beta/bulk/congresstrading
+    const { data } = await api.get('/live/congresstrading');
 
-  const { data } = await api.get('/latest', { params });
+    return data.map((t: any): NormalizedTrade => {
+      // Logic to determine transaction type if raw data differs
+      let type: 'Buy' | 'Sell' | 'Unknown' = 'Unknown';
+      if (t.Transaction && t.Transaction.includes('Buy')) type = 'Buy';
+      if (t.Transaction && t.Transaction.includes('Sell')) type = 'Sell';
+      if (t.Transaction && t.Transaction.includes('Purchase')) type = 'Buy';
+      if (t.Transaction && t.Transaction.includes('Sale')) type = 'Sell';
 
-  // Adjust mapping to match actual response shape
-  return data.map((t: any): NormalizedTrade => ({
-    externalId: t.id, // or t.trade_id
-    politicianExternalId: t.member_id,
-    politicianName: t.member_name,
-    chamber: t.chamber,
-    party: t.party,
-    state: t.state,
-    ticker: t.ticker,
-    assetName: t.asset_name,
-    transactionType: (t.transaction_type as 'Buy' | 'Sell' | 'Unknown') || 'Unknown',
-    amountRange: t.amount,
-    transactionDate: t.transaction_date,
-    filedDate: t.filed_date,
-    sourceUrl: t.source_url
-  }));
+      return {
+        externalId: `${t.Ticker}-${t.Date}-${t.Representative}-${Math.random().toString(36).substr(2, 9)}`,
+        politicianName: t.Representative || 'Unknown',
+        chamber: t.House === 'House' ? 'House' : 'Senate',
+        party: t.Party,
+        ticker: t.Ticker,
+        transactionType: type,
+        amountRange: t.Range,
+        transactionDate: t.Date,
+        filedDate: t.ReportDate,
+        // Fields not provided by this endpoint
+        politicianExternalId: undefined,
+        state: undefined,
+        assetName: undefined,
+        sourceUrl: undefined
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching trades from Quiver API:', error);
+    return [];
+  }
 };

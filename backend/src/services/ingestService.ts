@@ -1,6 +1,6 @@
 import { Politician, IPolitician } from '../models/Politician';
 import { Trade } from '../models/Trade';
-import { NormalizedTrade } from './congressAPI';
+import { NormalizedTrade } from './congressApi';
 
 const upsertPolitician = async (trade: NormalizedTrade): Promise<IPolitician> => {
   const filter = trade.politicianExternalId

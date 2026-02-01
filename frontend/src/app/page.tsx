@@ -13,90 +13,72 @@ import {
   List,
   Sun,
   Moon,
+  Loader2,
 } from "lucide-react";
-
-const TRADES: Trade[] = [
-  {
-    id: "1",
-    name: "Nancy Pelosi",
-    party: "D",
-    ticker: "NVDA",
-    type: "Buy",
-    amount: "$1M+",
-    date: "2h ago",
-    reliability: 98,
-  },
-  {
-    id: "2",
-    name: "Tommy Tuberville",
-    party: "R",
-    ticker: "XOM",
-    type: "Sell",
-    amount: "$50K",
-    date: "5h ago",
-    reliability: 85,
-  },
-  {
-    id: "3",
-    name: "Josh Gottheimer",
-    party: "D",
-    ticker: "MSFT",
-    type: "Buy",
-    amount: "$250K",
-    date: "1d ago",
-    reliability: 92,
-  },
-  {
-    id: "4",
-    name: "Michael McCaul",
-    party: "R",
-    ticker: "META",
-    type: "Buy",
-    amount: "$500K",
-    date: "1d ago",
-    reliability: 95,
-  },
-  {
-    id: "5",
-    name: "Ro Khanna",
-    party: "D",
-    ticker: "AAPL",
-    type: "Sell",
-    amount: "$15K",
-    date: "2d ago",
-    reliability: 88,
-  },
-  {
-    id: "6",
-    name: "Mark Green",
-    party: "R",
-    ticker: "NRT",
-    type: "Buy",
-    amount: "$250K",
-    date: "2d ago",
-    reliability: 99,
-  },
-];
 
 export default function NexusDashboard() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    fetchTrades();
+  }, []);
+
+  const fetchTrades = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:4000/api/trades');
+      if (!response.ok) {
+        throw new Error('Failed to fetch trades');
+      }
+      const data = await response.json();
+      
+      // Transform API data to match Trade interface if necessary
+      // Assuming backend returns { trades: [] } based on routes/trades.ts
+      const formattedTrades = data.trades.map((trade: any) => ({
+        id: trade.externalId || trade._id,
+        name: trade.politicianName,
+        party: trade.party, // Assuming party is available or we might need to map it
+        ticker: trade.ticker,
+        type: trade.transactionType,
+        amount: trade.amountRange,
+        date: new Date(trade.transactionDate).toLocaleDateString(), // Format date
+        reliability: 90, // Placeholder as backend might not have this yet
+        // Add other fields as necessary
+      }));
+
+      setTrades(formattedTrades);
+    } catch (err) {
+      console.error("Error fetching trades:", err);
+      setError("Failed to load live trade data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- LOGIC: FILTERING ---
   const filteredTrades = useMemo(() => {
-    return TRADES.filter((trade) => {
+    return trades.filter((trade) => {
       const searchLower = searchQuery.toLowerCase();
+      // Safely handle potential undefined values
+      const name = trade.name ? trade.name.toLowerCase() : "";
+      const ticker = trade.ticker ? trade.ticker.toLowerCase() : "";
+      const party = trade.party ? trade.party.toLowerCase() : "";
+      
       return (
-        trade.name.toLowerCase().includes(searchLower) ||
-        trade.ticker.toLowerCase().includes(searchLower) ||
-        trade.party.toLowerCase().includes(searchLower)
+        name.includes(searchLower) ||
+        ticker.includes(searchLower) ||
+        party.includes(searchLower)
       );
     });
-  }, [searchQuery]);
+  }, [searchQuery, trades]);
 
-  useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   const toggleTheme = () =>
@@ -119,29 +101,6 @@ export default function NexusDashboard() {
               Institutional Transparency Protocol
             </p>
           </div>
-
-          {/* <div className="flex items-center gap-3 bg-white dark:bg-zinc-900/50 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-800/50 backdrop-blur-sm shadow-sm dark:shadow-none">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-xl ${
-                viewMode === "grid"
-                  ? "bg-zinc-100 dark:bg-zinc-800 text-cyan-500"
-                  : "text-zinc-400"
-              }`}
-            >
-              <LayoutGrid size={20} />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded-xl ${
-                viewMode === "list"
-                  ? "bg-zinc-100 dark:bg-zinc-800 text-cyan-500"
-                  : "text-zinc-400"
-              }`}
-            >
-              <List size={20} />
-            </button>
-          </div> */}
         </header>
 
         {/* Search Bar - Linked to State */}
@@ -175,13 +134,26 @@ export default function NexusDashboard() {
                   : "grid-cols-1"
               }`}
             >
-              {filteredTrades.map((trade) => (
-                <TradeCard key={trade.id} trade={trade} />
-              ))}
-              {filteredTrades.length === 0 && (
-                <div className="col-span-full py-20 text-center text-zinc-500 italic border border-dashed border-zinc-800 rounded-[2rem]">
-                  No protocol matches found for "{searchQuery}"
+              {loading ? (
+                 <div className="col-span-full py-20 flex flex-col items-center justify-center text-zinc-500">
+                    <Loader2 className="w-8 h-8 animate-spin mb-4 text-cyan-500" />
+                    <p>Syncing encrypted trade data...</p>
+                 </div>
+              ) : error ? (
+                <div className="col-span-full py-20 text-center text-red-500 border border-dashed border-red-800/20 rounded-[2rem] bg-red-500/5">
+                  {error}
                 </div>
+              ) : (
+                <>
+                  {filteredTrades.map((trade) => (
+                    <TradeCard key={trade.id} trade={trade} />
+                  ))}
+                  {filteredTrades.length === 0 && (
+                    <div className="col-span-full py-20 text-center text-zinc-500 italic border border-dashed border-zinc-800 rounded-[2rem]">
+                      No protocol matches found for "{searchQuery}"
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

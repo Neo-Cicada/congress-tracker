@@ -1,4 +1,4 @@
-import { NormalizedTrade } from './congressAPI';
+import { NormalizedTrade } from './congressApi';
 
 export const mockTrades: NormalizedTrade[] = [
   {
