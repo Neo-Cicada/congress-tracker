@@ -24,36 +24,60 @@ export default function NexusDashboard() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const LIMIT = 50;
+  
+  useEffect(() => setMounted(true), []);
 
+  // --- LOGIC: DEBOUNCE SEARCH ---
   useEffect(() => {
-    setMounted(true);
-    fetchTrades();
-  }, []);
+    setLoading(true);
+    const delayDebounceFn = setTimeout(() => {
+      setOffset(0); // Reset pagination on search
+      fetchTrades(0, true);
+    }, 500);
 
-  const fetchTrades = async () => {
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const fetchTrades = async (currentOffset = 0, isInitial = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('http://localhost:4000/api/trades');
+      if (currentOffset === 0) setLoading(true);
+      
+      const queryParams = new URLSearchParams({
+        limit: LIMIT.toString(),
+        skip: currentOffset.toString(),
+        ...(searchQuery && { search: searchQuery })
+      });
+
+      const response = await fetch(`http://localhost:4000/api/trades?${queryParams}`);
       if (!response.ok) {
         throw new Error('Failed to fetch trades');
       }
       const data = await response.json();
       
-      // Transform API data to match Trade interface if necessary
-      // Assuming backend returns { trades: [] } based on routes/trades.ts
       const formattedTrades = data.trades.map((trade: any) => ({
         id: trade.externalId || trade._id,
+        politicianId: trade.politicianId,
         name: trade.politicianName,
-        party: trade.party, // Assuming party is available or we might need to map it
+        party: trade.party,
         ticker: trade.ticker,
         type: trade.transactionType,
         amount: trade.amountRange,
-        date: new Date(trade.transactionDate).toLocaleDateString(), // Format date
-        reliability: 90, // Placeholder as backend might not have this yet
-        // Add other fields as necessary
+        date: new Date(trade.transactionDate || trade.filedDate || Date.now()).toLocaleDateString(),
+        reliability: 90,
       }));
 
-      setTrades(formattedTrades);
+      // If we got fewer items than limit, no more data
+      if (formattedTrades.length < LIMIT) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+
+      setTrades(prev => isInitial ? formattedTrades : [...prev, ...formattedTrades]);
+      setOffset(currentOffset + LIMIT);
     } catch (err) {
       console.error("Error fetching trades:", err);
       setError("Failed to load live trade data.");
@@ -62,22 +86,12 @@ export default function NexusDashboard() {
     }
   };
 
-  // --- LOGIC: FILTERING ---
-  const filteredTrades = useMemo(() => {
-    return trades.filter((trade) => {
-      const searchLower = searchQuery.toLowerCase();
-      // Safely handle potential undefined values
-      const name = trade.name ? trade.name.toLowerCase() : "";
-      const ticker = trade.ticker ? trade.ticker.toLowerCase() : "";
-      const party = trade.party ? trade.party.toLowerCase() : "";
-      
-      return (
-        name.includes(searchLower) ||
-        ticker.includes(searchLower) ||
-        party.includes(searchLower)
-      );
-    });
-  }, [searchQuery, trades]);
+  const handleLoadMore = () => {
+    fetchTrades(offset);
+  };
+  
+  // No more client-side filtering needed
+  const filteredTrades = trades;
 
   if (!mounted) return null;
 
@@ -156,6 +170,19 @@ export default function NexusDashboard() {
                 </>
               )}
             </div>
+            
+            {/* Load More Button */}
+            {!loading && hasMore && trades.length > 0 && !error && (
+               <div className="mt-12 flex justify-center">
+                  <button 
+                    onClick={handleLoadMore}
+                    className="group relative px-8 py-3 bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 font-bold uppercase text-xs tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-cyan-500/20"
+                  >
+                    Load More Data
+                    <div className="absolute inset-0 rounded-xl ring-2 ring-white/20 dark:ring-black/10 group-hover:ring-cyan-500/50 transition-all" />
+                  </button>
+               </div>
+            )}
           </div>
         </div>
 

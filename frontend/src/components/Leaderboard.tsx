@@ -8,6 +8,7 @@ interface LeaderboardEntry {
   party: "D" | "R";
   returns: number;
   topHolding: string;
+  id?: string;
 }
 
 const LEADERS: LeaderboardEntry[] = [
@@ -65,10 +66,53 @@ const LEADERS: LeaderboardEntry[] = [
   },
 ];
 
-export const Leaderboard = () => {
+const Leaderboard = () => {
+  const [leaders, setLeaders] = React.useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/api/leaderboard");
+        if (!response.ok) throw new Error("Failed to fetch leaderboard");
+        const data = await response.json();
+        
+        const mapped: LeaderboardEntry[] = data.map((p: any, index: number) => ({
+          rank: index + 1,
+          name: p.name,
+          party: p.party || "I",
+          returns: p.stats?.ytdReturn || 0,
+          topHolding: p.stats?.topHolding || "N/A",
+          id: p._id // Verify if we need ID for linking
+        }));
+        setLeaders(mapped);
+      } catch (error) {
+        console.error(error);
+        // Fallback or empty state could be handled here
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
+
+  if (loading) {
+     return (
+        <div className="group bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 rounded-[2rem] p-8 h-fit animate-pulse">
+            <div className="h-8 bg-zinc-200 dark:bg-zinc-800 rounded w-1/3 mb-4"></div>
+            <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-16 bg-zinc-200 dark:bg-zinc-800 rounded-2xl"></div>
+                ))}
+            </div>
+        </div>
+     );
+  }
+
   return (
     /* MATCHING THE TRADECARD CONTAINER STYLE */
-    <div className="group bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 hover:border-cyan-500/30 rounded-[2rem] p-8 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5 h-full">
+    <div className="group bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 hover:border-cyan-500/30 rounded-[2rem] p-8 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5 h-fit">
       {/* HEADER SECTION */}
       <div className="flex items-center justify-between mb-10">
         <div>
@@ -89,16 +133,16 @@ export const Leaderboard = () => {
 
       {/* LEADERS LIST */}
       <div className="space-y-8">
-        {LEADERS.map((leader) => (
+        {leaders.map((leader) => (
           <Link
-            href={`/politician/${leader.rank}`} // Mock ID for now
+            href={`/politician/${leader.id || leader.rank}`} // Use ID if available
             key={leader.rank}
             className="relative flex items-center justify-between group/row cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5 p-4 rounded-2xl transition-all"
           >
             <div className="flex items-center gap-4">
               {/* RANK INDICATOR */}
               <span className="text-xs font-black text-zinc-400 dark:text-zinc-600 font-mono italic w-4">
-                0{leader.rank}
+                {leader.rank < 10 ? `0${leader.rank}` : leader.rank}
               </span>
 
               {/* PROFILE AVATAR WITH PARTY INDICATOR */}
@@ -113,7 +157,9 @@ export const Leaderboard = () => {
                   className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-2 border-white dark:border-[#050505] flex items-center justify-center text-[9px] font-black text-white ${
                     leader.party === "D"
                       ? "bg-blue-500 shadow-blue-500/20"
-                      : "bg-red-500 shadow-red-500/20"
+                      : leader.party === "R"
+                      ? "bg-red-500 shadow-red-500/20"
+                      : "bg-purple-500 shadow-purple-500/20"
                   } shadow-lg`}
                 >
                   {leader.party}
@@ -132,15 +178,16 @@ export const Leaderboard = () => {
 
             {/* PERFORMANCE METRICS */}
             <div className="text-right">
-              <div className="flex items-center justify-end gap-1 text-emerald-500 dark:text-emerald-400 font-mono font-black text-lg italic tracking-tighter">
-                <TrendingUp size={16} />+{leader.returns}%
+              <div className={`flex items-center justify-end gap-1 ${leader.returns >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'} font-mono font-black text-lg italic tracking-tighter`}>
+                <TrendingUp size={16} className={leader.returns < 0 ? 'rotate-180' : ''} />
+                {leader.returns >= 0 ? '+' : ''}{leader.returns}%
               </div>
 
               {/* MATCHING THE RELIABILITY BAR FROM TRADECARD */}
               <div className="w-20 h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-2 ml-auto overflow-hidden">
                 <div
-                  className="h-full bg-emerald-500 transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                  style={{ width: `${(leader.returns / 70) * 100}%` }}
+                  className={`h-full ${leader.returns >= 0 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'} transition-all duration-1000`}
+                  style={{ width: `${Math.min(Math.abs(leader.returns), 100)}%` }}
                 />
               </div>
             </div>
@@ -157,3 +204,4 @@ export const Leaderboard = () => {
     </div>
   );
 };
+export { Leaderboard };

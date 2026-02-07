@@ -46,7 +46,7 @@ export const fetchRecentTrades = async (): Promise<NormalizedTrade[]> => {
         ticker: t.Ticker,
         transactionType: type,
         amountRange: t.Range,
-        transactionDate: t.Date,
+        transactionDate: t.TransactionDate,
         filedDate: t.ReportDate,
         // Fields not provided by this endpoint
         politicianExternalId: undefined,
