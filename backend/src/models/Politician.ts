@@ -7,6 +7,11 @@ export interface IPolitician extends Document {
   state?: string;
   externalId?: string;
   photoUrl?: string;
+  stats?: {
+    ytdReturn: number;
+    topHolding: string;
+    lastUpdated: Date;
+  };
 }
 
 const PoliticianSchema = new Schema<IPolitician>(
@@ -16,7 +21,12 @@ const PoliticianSchema = new Schema<IPolitician>(
     party: { type: String },
     state: { type: String },
     externalId: { type: String, index: true },
-    photoUrl: { type: String }
+    photoUrl: { type: String },
+    stats: {
+      ytdReturn: { type: Number },
+      topHolding: { type: String },
+      lastUpdated: { type: Date }
+    }
   },
   { timestamps: true }
 );

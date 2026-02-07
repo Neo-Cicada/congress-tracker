@@ -24,11 +24,33 @@ router.get('/', async (req: Request, res: Response) => {
       chamber,
       from,
       to,
+      search,
       limit = '50',
       skip = '0'
     } = req.query;
 
     const query: any = {};
+
+    // Generic Search Logic
+    if (search && typeof search === 'string') {
+      const searchRegex = new RegExp(search, 'i');
+      const orConditions: any[] = [
+        { politicianName: { $regex: searchRegex } },
+        { ticker: { $regex: searchRegex } }
+      ];
+
+      // Handle full party names in search
+      const lowerSearch = search.toLowerCase();
+      if ('democrat'.includes(lowerSearch)) orConditions.push({ party: 'D' });
+      if ('republican'.includes(lowerSearch)) orConditions.push({ party: 'R' });
+
+      // Also allow direct party match if shorter (e.g. search "D")
+      if (['d', 'r'].includes(lowerSearch)) {
+        orConditions.push({ party: search.toUpperCase() });
+      }
+
+      query.$or = orConditions;
+    }
 
     if (ticker && typeof ticker === 'string') {
       query.ticker = ticker.toUpperCase();
@@ -65,6 +87,7 @@ router.get('/', async (req: Request, res: Response) => {
       Trade.countDocuments(query)
     ]);
 
+    res.set('Cache-Control', 'public, max-age=300, s-maxage=300'); // Cache for 5 minutes
     res.json({
       trades: items,
       page: {

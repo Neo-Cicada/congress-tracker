@@ -4,6 +4,7 @@ import { ArrowUpRight, ArrowDownRight, ChevronRight, Clock } from 'lucide-react'
 
 export interface Trade {
   id: string;
+  politicianId?: string;
   name: string;
   party: 'D' | 'R';
   ticker: string;
@@ -30,7 +31,7 @@ export const TradeCard: React.FC<{ trade: Trade }> = ({ trade }) => {
             {trade.party}
           </div>
           <div>
-            <Link href={`/politician/${trade.id}`} className="font-bold text-zinc-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors hover:underline decoration-cyan-500/30">
+            <Link href={`/politician/${trade.politicianId || trade.id}`} className="font-bold text-zinc-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors hover:underline decoration-cyan-500/30">
               {trade.name}
             </Link>
             <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 dark:text-zinc-500 font-mono tracking-tighter uppercase">

@@ -8,6 +8,8 @@ import { connectDB } from './config/db';
 import tradesRouter from './routes/trades';
 import { setupTradeSyncCron } from './cron/syncTrades';
 import devRouter from './routes/dev';
+import leaderboardRoutes from './routes/leaderboardRoutes';
+import politicianRoutes from './routes/politicianRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -34,6 +36,8 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // routes
 app.use('/api/trades', tradesRouter);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/politician', politicianRoutes);
 
 // dev routes (optional: only enable in non-prod)
 if (process.env.NODE_ENV !== 'production') {
