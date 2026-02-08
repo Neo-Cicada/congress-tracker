@@ -17,15 +17,25 @@ const checkDb = async () => {
         console.log(`Trades: ${tradeCount}`);
         console.log(`Politicians: ${politicianCount}`);
 
-        if (tradeCount > 0) {
-            const sampleTrade = await Trade.findOne();
-            console.log('Sample Trade:', sampleTrade);
+        // Check for photoUrl
+        const politiciansWithPhoto = await Politician.countDocuments({ photoUrl: { $exists: true, $ne: '' } });
+        console.log(`Politicians with photoUrl: ${politiciansWithPhoto}`);
+
+        const sample = await Politician.findOne({ photoUrl: { $exists: true, $ne: '' } });
+        if (sample) {
+            console.log('Sample Politician with Photo:', sample.name, sample.photoUrl);
+        } else {
+            console.log('No politicians with photos found.');
         }
 
-        process.exit(0);
-    } catch (err) {
-        console.error(err);
-        process.exit(1);
+        const sampleTrade = await Trade.findOne();
+        if (sampleTrade) {
+            console.log('Sample Trade:', sampleTrade);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        await mongoose.disconnect();
     }
 };
 

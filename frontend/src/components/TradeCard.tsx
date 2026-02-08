@@ -13,6 +13,7 @@ export interface Trade {
   date: string;
   reliability: number;
   filingDelay?: number; // Days between trade and report
+  disableLink?: boolean;
 }
 
 export const TradeCard: React.FC<{ trade: Trade }> = ({ trade }) => {
@@ -31,9 +32,15 @@ export const TradeCard: React.FC<{ trade: Trade }> = ({ trade }) => {
             {trade.party}
           </div>
           <div>
-            <Link href={`/politician/${trade.politicianId || trade.id}`} className="font-bold text-zinc-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors hover:underline decoration-cyan-500/30">
-              {trade.name}
-            </Link>
+            {trade.disableLink ? (
+               <span className="font-bold text-zinc-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                  {trade.name}
+               </span>
+            ) : (
+                <Link href={`/politician/${trade.politicianId || trade.id}`} className="font-bold text-zinc-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors hover:underline decoration-cyan-500/30">
+                  {trade.name}
+                </Link>
+            )}
             <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 dark:text-zinc-500 font-mono tracking-tighter uppercase">
               <Clock size={10} /> {trade.date}
             </div>

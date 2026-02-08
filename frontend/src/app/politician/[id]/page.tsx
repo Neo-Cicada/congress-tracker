@@ -98,6 +98,7 @@ export default function PoliticianPage() {
         amount: t.amountRange,
         date: new Date(t.transactionDate).toLocaleDateString(),
         reliability: 85, // Mock reliability for now
+        disableLink: true, // Disable link on politician page
         // TradeCard visual depends on these
     }));
 
