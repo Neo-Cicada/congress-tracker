@@ -288,7 +288,11 @@ export const TimingDetector = () => {
 };
 
 // --- 4. Delay Violation Checker ---
-export const DelayChecker = () => {
+export interface DelayCheckerProps {
+    records: ComplianceRecord[];
+}
+
+export const DelayChecker = ({ records }: DelayCheckerProps) => {
     return (
       <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/50 rounded-3xl p-6 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-6">
@@ -305,9 +309,9 @@ export const DelayChecker = () => {
           </div>
         </div>
   
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[500px]">
             <table className="w-full text-sm text-left">
-                <thead className="text-xs text-zinc-500 uppercase bg-zinc-50/50 dark:bg-zinc-800/20 rounded-lg">
+                <thead className="text-xs text-zinc-500 uppercase bg-zinc-50/50 dark:bg-zinc-800/20 rounded-lg sticky top-0 backdrop-blur-md">
                     <tr>
                         <th className="px-4 py-3 rounded-l-lg">Politician</th>
                         <th className="px-4 py-3">Ticker</th>
@@ -316,7 +320,7 @@ export const DelayChecker = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {COMPLIANCE_RECORDS.map((record) => (
+                    {records.map((record) => (
                         <tr key={record.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                             <td className="px-4 py-4 font-medium text-zinc-900 dark:text-zinc-200">{record.politicianName}</td>
                             <td className="px-4 py-4 text-zinc-500">{record.ticker}</td>
@@ -344,6 +348,13 @@ export const DelayChecker = () => {
                             </td>
                         </tr>
                     ))}
+                    {records.length === 0 && (
+                        <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-zinc-500">
+                                No delay violations found in recent records.
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
         </div>

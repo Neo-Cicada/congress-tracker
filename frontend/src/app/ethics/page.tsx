@@ -8,13 +8,38 @@ import {
   TimingDetector,
   BehaviorTracker,
   DelayChecker,
+  ComplianceRecord
 } from "../../components/EthicsComponents";
+
+interface EthicsData {
+    score: number;
+    riskLevel: "LOW" | "MEDIUM" | "HIGH";
+    complianceRecords: ComplianceRecord[];
+    violationCount: number;
+    lateCount: number;
+    totalTrades: number;
+}
 
 export default function EthicsPage() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState<EthicsData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    fetch('/api/ethics/summary')
+        .then(res => res.json())
+        .then(data => {
+            setData(data);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error('Failed to fetch ethics data:', err);
+            setLoading(false);
+        });
+  }, []);
+
   if (!mounted) return null;
 
   return (
@@ -29,16 +54,24 @@ export default function EthicsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2">
             Ethics Monitor
           </h1>
-          <p className="text-zinc-500 text-sm font-medium uppercase tracking-[0.2em]">
-            Real-time Conflict & Compliance Analysis
-          </p>
+            {loading ? (
+                 <div className="h-4 w-48 bg-zinc-200 dark:bg-zinc-800 animate-pulse rounded" />
+            ) : (
+                <p className="text-zinc-500 text-sm font-medium uppercase tracking-[0.2em] flex items-center gap-2">
+                    Real-time Analysis • <span className="text-zinc-900 dark:text-white">{data?.totalTrades || 0} Trades Scanned</span>
+                </p>
+            )}
         </header>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Row 1: Score & Behavior */}
           <div className="col-span-1 md:col-span-4">
-            <EthicsScoreCard score={85} riskLevel="HIGH" />
+             {loading ? (
+                <div className="h-64 rounded-[2.5rem] bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+             ) : (
+                <EthicsScoreCard score={data?.score || 100} riskLevel={data?.riskLevel || 'LOW'} />
+             )}
           </div>
           <div className="col-span-1 md:col-span-8">
             <BehaviorTracker />
@@ -54,7 +87,11 @@ export default function EthicsPage() {
 
           {/* Row 3: Compliance Data */}
           <div className="col-span-1 md:col-span-12">
-            <DelayChecker />
+             {loading ? (
+                <div className="h-64 rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+             ) : (
+                <DelayChecker records={data?.complianceRecords || []} />
+             )}
           </div>
         </div>
         
