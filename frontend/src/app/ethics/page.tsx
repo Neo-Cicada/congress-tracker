@@ -8,16 +8,22 @@ import {
   TimingDetector,
   BehaviorTracker,
   DelayChecker,
-  ComplianceRecord
+  ComplianceRecord,
+  Conflict,
+  SuspiciousTrade,
+  BehaviorStats
 } from "../../components/EthicsComponents";
 
 interface EthicsData {
     score: number;
     riskLevel: "LOW" | "MEDIUM" | "HIGH";
     complianceRecords: ComplianceRecord[];
+    conflicts: Conflict[];
+    suspiciousTrades: SuspiciousTrade[];
     violationCount: number;
     lateCount: number;
     totalTrades: number;
+    behavior?: BehaviorStats;
 }
 
 export default function EthicsPage() {
@@ -28,7 +34,7 @@ export default function EthicsPage() {
 
   useEffect(() => {
     setMounted(true);
-    fetch('/api/ethics/summary')
+    fetch('/api/ethics/summary', { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
             setData(data);
@@ -74,15 +80,23 @@ export default function EthicsPage() {
              )}
           </div>
           <div className="col-span-1 md:col-span-8">
-            <BehaviorTracker />
+            <BehaviorTracker stats={data?.behavior} />
           </div>
 
           {/* Row 2: Deep Dives */}
           <div className="col-span-1 md:col-span-6">
-            <ConflictScanner />
+             {loading ? (
+                <div className="h-[400px] rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+             ) : (
+                <ConflictScanner conflicts={data?.conflicts || []} />
+             )}
           </div>
           <div className="col-span-1 md:col-span-6">
-            <TimingDetector />
+             {loading ? (
+                <div className="h-[400px] rounded-3xl bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+             ) : (
+                <TimingDetector trades={data?.suspiciousTrades || []} />
+             )}
           </div>
 
           {/* Row 3: Compliance Data */}

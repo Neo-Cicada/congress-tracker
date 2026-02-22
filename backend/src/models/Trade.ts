@@ -8,6 +8,7 @@ export interface ITrade extends Document {
   party?: string;
   ticker: string;
   assetName?: string;
+  sector?: string; // Added sector field
   transactionType: 'Buy' | 'Sell' | 'Unknown';
   amountRange?: string;
   transactionDate?: Date;
@@ -26,6 +27,7 @@ const TradeSchema = new Schema<ITrade>(
 
     ticker: { type: String, index: true },
     assetName: { type: String },
+    sector: { type: String }, // Added sector field
 
     transactionType: { type: String, enum: ['Buy', 'Sell', 'Unknown'], index: true },
     amountRange: { type: String },

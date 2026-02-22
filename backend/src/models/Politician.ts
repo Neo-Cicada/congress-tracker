@@ -7,6 +7,7 @@ export interface IPolitician extends Document {
   state?: string;
   externalId?: string;
   photoUrl?: string;
+  committees?: string[]; // Added committees field
   stats?: {
     ytdReturn: number;
     topHolding: string;
@@ -22,6 +23,7 @@ const PoliticianSchema = new Schema<IPolitician>(
     state: { type: String },
     externalId: { type: String, index: true },
     photoUrl: { type: String },
+    committees: [{ type: String }], // Added committees field
     stats: {
       ytdReturn: { type: Number },
       topHolding: { type: String },
