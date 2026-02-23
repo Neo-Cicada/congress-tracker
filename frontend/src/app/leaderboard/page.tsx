@@ -6,22 +6,58 @@ import { User, TrendingUp, TrendingDown, ArrowRight, ShieldAlert } from "lucide-
 import { TradeCard } from "../../components/TradeCard";
 import Link from "next/link";
 
-// --- MOCK DATA ---
-const TOP_GAINERS = [
-    { rank: 1, name: "Nancy Pelosi", party: "D", return: "+65.4%", trade: "NVDA calls" },
-    { rank: 2, name: "Mark Green", party: "R", return: "+52.1%", trade: "NRT energy" },
-    { rank: 3, name: "Josh Gottheimer", party: "D", return: "+48.9%", trade: "MSFT early entry" },
-];
-
-const TOP_LOSERS = [
-    { rank: 1, name: "Warren Davidson", party: "R", return: "-22.4%", trade: "Crypto crash" },
-    { rank: 2, name: "Marie Newman", party: "D", return: "-18.5%", trade: "Bio-tech miss" },
-    { rank: 3, name: "Peter Meijer", party: "R", return: "-12.1%", trade: "Retail slump" },
-];
+interface LeaderboardItem {
+    rank: number;
+    name: string;
+    party: string;
+    return: string;
+    trade: string;
+}
 
 export default function LeaderboardPage() {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    const [gainers, setGainers] = useState<LeaderboardItem[]>([]);
+    const [losers, setLosers] = useState<LeaderboardItem[]>([]);
+    const [suspiciousTrades, setSuspiciousTrades] = useState<any[]>([]);
+
+    useEffect(() => {
+        setMounted(true);
+        const fetchLeaderboards = async () => {
+            try {
+                const [gainersRes, losersRes, ethicsRes] = await Promise.all([
+                    fetch('http://localhost:4000/api/leaderboard?sort=desc'),
+                    fetch('http://localhost:4000/api/leaderboard?sort=asc'),
+                    fetch('http://localhost:4000/api/ethics/summary')
+                ]);
+                const gainersData = await gainersRes.json();
+                const losersData = await losersRes.json();
+                const ethicsData = await ethicsRes.json();
+                
+                if (ethicsData && ethicsData.suspiciousTrades) {
+                    setSuspiciousTrades(ethicsData.suspiciousTrades.slice(0, 2));
+                }
+                
+                const formatData = (data: any[]): LeaderboardItem[] => data.map((p, i) => {
+                    const party = p.party?.startsWith("R") ? "R" : p.party?.startsWith("D") ? "D" : "I";
+                    const ret = (p.stats?.ytdReturn || 0).toFixed(1);
+                    return {
+                        rank: i + 1,
+                        name: p.name,
+                        party,
+                        return: p.stats?.ytdReturn > 0 ? `+${ret}%` : `${ret}%`,
+                        trade: p.stats?.topHolding || "Active Trader"
+                    };
+                });
+
+                if (Array.isArray(gainersData)) setGainers(formatData(gainersData).slice(0, 10));
+                if (Array.isArray(losersData)) setLosers(formatData(losersData).slice(0, 10));
+            } catch (error) {
+                console.error('Failed to fetch leaderboard data:', error);
+            }
+        };
+        fetchLeaderboards();
+    }, []);
+
     if (!mounted) return null;
 
     return (
@@ -54,7 +90,7 @@ export default function LeaderboardPage() {
                          <span className="text-xs font-mono text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">YTD</span>
                     </div>
                     <div className="space-y-4">
-                        {TOP_GAINERS.map((g, i) => (
+                        {gainers.map((g, i) => (
                             <div key={i} className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="text-xl font-black text-zinc-300 dark:text-zinc-700 italic">0{g.rank}</span>
@@ -80,7 +116,7 @@ export default function LeaderboardPage() {
                          <span className="text-xs font-mono text-rose-500 bg-rose-500/10 px-2 py-1 rounded">YTD</span>
                     </div>
                     <div className="space-y-4">
-                        {TOP_LOSERS.map((g, i) => (
+                        {losers.map((g, i) => (
                             <div key={i} className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="text-xl font-black text-zinc-300 dark:text-zinc-700 italic">0{g.rank}</span>
@@ -115,30 +151,26 @@ export default function LeaderboardPage() {
                         <h3 className="font-bold text-lg text-amber-600 dark:text-amber-400">Suspicious Timing</h3>
                     </div>
                     <div className="space-y-6">
-                        <div className="bg-white/50 dark:bg-black/20 p-4 rounded-2xl border border-amber-500/10">
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="font-bold text-sm dark:text-zinc-200">Tommy Tuberville</div>
-                                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded uppercase">High Risk</span>
-                            </div>
-                            <p className="text-xs text-zinc-500 leading-relaxed">
-                                Bought <span className="font-bold text-zinc-700 dark:text-zinc-300">Humana (HUM)</span> puts 2 days before Medicare reimbursement cuts were announced.
-                            </p>
-                             <div className="mt-3 flex items-center gap-2 text-[10px] text-amber-600/80 font-mono">
-                                <span className="font-bold">Gain: +420%</span>
-                                <span className="w-1 h-1 rounded-full bg-amber-500/50" />
-                                <span>2d Hold</span>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/50 dark:bg-black/20 p-4 rounded-2xl border border-amber-500/10">
-                             <div className="flex justify-between items-start mb-2">
-                                <div className="font-bold text-sm dark:text-zinc-200">Ro Khanna</div>
-                                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded uppercase">Medium Risk</span>
-                            </div>
-                             <p className="text-xs text-zinc-500 leading-relaxed">
-                                Heavy volume in <span className="font-bold text-zinc-700 dark:text-zinc-300">Defense Stocks</span> prior to committee budget approval.
-                            </p>
-                        </div>
+                        {suspiciousTrades.length > 0 ? (
+                            suspiciousTrades.map((trade, i) => {
+                                const isBefore = trade.daysDiff < 0;
+                                const daysStr = Math.abs(trade.daysDiff);
+                                const riskLevel = daysStr <= 3 ? "High Risk" : "Medium Risk";
+                                return (
+                                    <div key={i} className="bg-white/50 dark:bg-black/20 p-4 rounded-2xl border border-amber-500/10">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="font-bold text-sm dark:text-zinc-200">{trade.politicianName}</div>
+                                            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded uppercase">{riskLevel}</span>
+                                        </div>
+                                        <p className="text-xs text-zinc-500 leading-relaxed">
+                                            {trade.type === 'Buy' ? 'Bought' : 'Sold'} <span className="font-bold text-zinc-700 dark:text-zinc-300">{trade.ticker}</span> {daysStr} {daysStr === 1 ? 'day' : 'days'} {isBefore ? 'before' : 'after'} {trade.event}.
+                                        </p>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="text-sm text-zinc-500 italic px-4 py-2">No suspicious trades detected recently.</div>
+                        )}
                     </div>
                      <Link href="/ethics" className="block mt-6 text-center text-xs font-bold text-amber-600 dark:text-amber-500 hover:opacity-80 transition-opacity">
                         VIEW ETHICS REPORT &rarr;

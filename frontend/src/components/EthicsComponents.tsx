@@ -44,58 +44,7 @@ export interface ComplianceRecord {
   status: "on-time" | "late" | "violation";
 }
 
-// Mock Data structure removed for Conflicts as it now comes from the API
-
-const SUSPICIOUS_TRADES: SuspiciousTrade[] = [
-  {
-    id: "s1",
-    politicianName: "Nancy Pelosi",
-    ticker: "NVDA",
-    type: "Buy",
-    date: "2024-01-10",
-    event: "CHIPS Act Hearing",
-    daysDiff: -3,
-  },
-  {
-    id: "s2",
-    politicianName: "Tommy Tuberville",
-    ticker: "AG",
-    type: "Sell",
-    date: "2024-02-05",
-    event: "Commodities Regulation Vote",
-    daysDiff: 1,
-  },
-];
-
-const COMPLIANCE_RECORDS: ComplianceRecord[] = [
-  {
-    id: "r1",
-    politicianName: "Ro Khanna",
-    ticker: "AAPL",
-    tradeDate: "2024-01-15",
-    reportDate: "2024-01-20",
-    daysLate: 0,
-    status: "on-time",
-  },
-  {
-    id: "r2",
-    politicianName: "Pat Fallon",
-    ticker: "MSFT",
-    tradeDate: "2023-12-01",
-    reportDate: "2024-02-15",
-    daysLate: 30,
-    status: "late",
-  },
-  {
-    id: "r3",
-    politicianName: "Diana Harshbarger",
-    ticker: "LLY",
-    tradeDate: "2023-11-10",
-    reportDate: "2024-03-01",
-    daysLate: 65,
-    status: "violation",
-  },
-];
+// Mock Data structure removed for Conflicts, Suspicious Trades, and Compliance as they now come from the API
 
 // --- 1. Ethics Score Card ---
 export const EthicsScoreCard = ({

@@ -7,7 +7,7 @@ import { Trade } from '../models/Trade';
 const router = express.Router();
 // Use singleton approach or instantiate with options if needed, 
 // strictly YahooFinance default import used here per previous fix.
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 // Cache for SPY YTD return
 let cachedSpyYtd: number | null = null;

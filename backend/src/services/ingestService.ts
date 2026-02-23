@@ -1,7 +1,9 @@
 import { Politician, IPolitician } from '../models/Politician';
 import { Trade } from '../models/Trade';
 import { NormalizedTrade } from './congressApi';
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
+
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 import { assignMockCommittees } from '../utils/committeeSectors';
 
 const upsertPolitician = async (trade: NormalizedTrade): Promise<IPolitician> => {

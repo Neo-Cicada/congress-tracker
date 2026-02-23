@@ -7,39 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
-// --- MOCK DATA FOR DEMO ---
-const MOCK_TRADES: Trade[] = [
-  {
-    id: "101",
-    name: "Nancy Pelosi",
-    party: "D",
-    ticker: "NVDA",
-    type: "Buy",
-    amount: "$1M+",
-    date: "2h ago",
-    reliability: 98,
-  },
-  {
-    id: "102",
-    name: "Nancy Pelosi",
-    party: "D",
-    ticker: "AAPL",
-    type: "Sell",
-    amount: "$500K",
-    date: "3d ago",
-    reliability: 98,
-  },
-  {
-    id: "103",
-    name: "Nancy Pelosi",
-    party: "D",
-    ticker: "MSFT",
-    type: "Buy",
-    amount: "$250K",
-    date: "1w ago",
-    reliability: 98,
-  },
-];
+
 
 export default function PoliticianPage() {
     const params = useParams();
@@ -86,8 +54,6 @@ export default function PoliticianPage() {
          );
     }
 
-    // Helper to format mock trade object for TradeCard if needed, 
-    // but TradeCard might expect specific shape. 
     // Adapting backend trade to TradeCard props:
     const formattedTrades = data.trades.map((t: any) => ({
         id: t._id,

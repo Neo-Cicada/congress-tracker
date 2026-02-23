@@ -7,7 +7,7 @@ import { checkSuspiciousTiming } from '../utils/marketEvents';
 import YahooFinance from 'yahoo-finance2';
 
 const router = Router();
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 

@@ -1,7 +1,81 @@
 import { Router, Request, Response } from 'express';
+import YahooFinance from 'yahoo-finance2';
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 import { Trade } from '../models/Trade';
 
 const router = Router();
+
+/**
+ * GET /api/trades/popular
+ * Returns the most popular stocks traded by members of Congress in the last 30 days.
+ */
+router.get('/popular', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const pipeline = [
+      {
+        $match: {
+          transactionDate: { $gte: thirtyDaysAgo },
+          ticker: { $exists: true, $ne: null, $nin: ['', 'N/A'] }
+        }
+      },
+      {
+        $group: {
+          _id: '$ticker',
+          name: { $first: '$assetName' },
+          uniqueMembers: { $addToSet: '$politicianName' },
+          totalTrades: { $sum: 1 },
+          buyCount: {
+            $sum: { $cond: [{ $eq: ['$transactionType', 'Buy'] }, 1, 0] }
+          },
+          sellCount: {
+            $sum: { $cond: [{ $eq: ['$transactionType', 'Sell'] }, 1, 0] }
+          }
+        }
+      },
+      { $project: { ticker: '$_id', name: { $ifNull: ['$name', '$_id'] }, count: { $size: '$uniqueMembers' }, sentiment: { $cond: [{ $gte: ['$buyCount', '$sellCount'] }, 'Bullish', 'Bearish'] } } },
+      { $match: { count: { $gt: 1 } } },
+      { $sort: { count: -1 as const, ticker: 1 as const } },
+      { $limit: 10 }
+    ];
+
+    const popularStocks = await Trade.aggregate(pipeline as any[]);
+
+    // Fetch live market changes for these top tickers
+    const enhancedStocks = await Promise.all(
+      popularStocks.map(async (stock) => {
+        let changeStr = '+0%';
+        try {
+          const quote = await yahooFinance.quote(stock.ticker) as any;
+          const changePercent = quote?.regularMarketChangePercent || 0;
+          const sign = changePercent > 0 ? '+' : '';
+          changeStr = `${sign}${changePercent.toFixed(2)}%`;
+        } catch (err: any) {
+          // Fallback if quote fails
+          console.error(`Failed to fetch quote for ${stock.ticker}:`, err.message);
+          // Return N/A if API fails or rate limited
+          changeStr = 'N/A';
+        }
+
+        return {
+          ticker: stock.ticker as string,
+          name: stock.name as string,
+          count: Number(stock.count),
+          sentiment: stock.sentiment as string,
+          change: changeStr
+        };
+      })
+    );
+
+    res.set('Cache-Control', 'public, max-age=3600, s-maxage=3600'); // Cache for 1 hour
+    res.json(enhancedStocks);
+  } catch (err: any) {
+    console.error('Error fetching popular stocks:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 /**
  * GET /api/trades

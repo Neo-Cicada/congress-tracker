@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 
 const run = async () => {
     await connectDB();
-    console.log('Clearing existing trades (including mock data)...');
+    console.log('Clearing existing trades...');
     await Trade.deleteMany({});
     console.log('Trades cleared.');
 

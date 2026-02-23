@@ -7,11 +7,10 @@ import { Politician } from '../models/Politician';
 
 dotenv.config();
 
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 const CURRENT_YEAR = new Date().getFullYear();
-const LAST_YEAR = CURRENT_YEAR - 1; // 2025
-const START_DATE = new Date(`${LAST_YEAR}-01-01`);
+const START_DATE = new Date(`${CURRENT_YEAR}-01-01`);
 const DELAY_MS = 1000;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
