@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useAuth } from "../context/AuthContext";
 import {
   TrendingUp,
   Activity,
@@ -12,11 +13,13 @@ import {
   Sun,
   Moon,
   User,
+  LogOut,
 } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, resolvedTheme } = useTheme();
+  const { logout } = useAuth();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -48,8 +51,8 @@ export const Sidebar: React.FC = () => {
         <SidebarIcon
           icon={<Activity size={22} />}
           label="Live Feed"
-          href="/"
-          active={isActive("/")}
+          href="/dashboard"
+          active={isActive("/dashboard")}
         />
         <SidebarIcon
           icon={<ShieldCheck size={22} />}
@@ -73,6 +76,16 @@ export const Sidebar: React.FC = () => {
 
       {/* Bottom Actions */}
       <div className="flex flex-col gap-6 mt-auto">
+        <button
+          onClick={logout}
+          className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 group relative"
+        >
+          <LogOut size={20} />
+          <span className="hidden lg:block absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap uppercase tracking-widest border border-zinc-800 z-50">
+            Logout
+          </span>
+        </button>
+
         <button
           onClick={toggleTheme}
           className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-cyan-500 hover:border-cyan-500/30 transition-all duration-300"

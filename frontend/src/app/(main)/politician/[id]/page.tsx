@@ -1,8 +1,8 @@
 "use client";
 
 import React, { use } from "react";
-import { PoliticianHeader } from "../../../components/PoliticianHeader";
-import { TradeCard, Trade } from "../../../components/TradeCard";
+import { PoliticianHeader } from "../../../../components/PoliticianHeader";
+import { TradeCard, Trade } from "../../../../components/TradeCard";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

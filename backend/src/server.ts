@@ -11,6 +11,7 @@ import devRouter from './routes/dev';
 import leaderboardRoutes from './routes/leaderboardRoutes';
 import politicianRoutes from './routes/politicianRoutes';
 import ethicsRoutes from './routes/ethicsRoutes';
+import authRoutes from './routes/authRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -40,6 +41,7 @@ app.use('/api/trades', tradesRouter);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/politician', politicianRoutes);
 app.use('/api/ethics', ethicsRoutes);
+app.use('/api/auth', authRoutes);
 
 // dev routes (optional: only enable in non-prod)
 if (process.env.NODE_ENV !== 'production') {

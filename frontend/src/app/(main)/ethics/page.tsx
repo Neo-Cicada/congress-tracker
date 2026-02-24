@@ -12,8 +12,8 @@ import {
   Conflict,
   SuspiciousTrade,
   BehaviorStats
-} from "../../components/EthicsComponents";
-import { fetchWithCache } from "../../lib/apiCache";
+} from "../../../components/EthicsComponents";
+import { fetchWithCache } from "../../../lib/apiCache";
 
 interface EthicsData {
     score: number;

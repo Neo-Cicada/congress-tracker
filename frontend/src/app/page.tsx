@@ -1,196 +1,118 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useTheme } from "next-themes";
-import { TradeCard, Trade } from "../components/TradeCard";
-import { Leaderboard } from "../components/Leaderboard";
-import { fetchWithCache } from "../lib/apiCache";
-import {
-  TrendingUp,
-  Activity,
-  ShieldCheck,
-  Search,
-  LayoutGrid,
-  List,
-  Sun,
-  Moon,
-  Loader2,
-} from "lucide-react";
+import React, { useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "next/navigation";
+import { ShieldCheck, TrendingUp, Activity, Lock, ArrowRight } from "lucide-react";
 
-export default function NexusDashboard() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const LIMIT = 50;
-  
-  useEffect(() => setMounted(true), []);
+export default function LandingPage() {
+  const { user } = useAuth();
+  const router = useRouter();
 
-  // --- LOGIC: DEBOUNCE SEARCH ---
+  // If user is already logged in, redirect them to dashboard
   useEffect(() => {
-    setLoading(true);
-    const delayDebounceFn = setTimeout(() => {
-      setOffset(0); // Reset pagination on search
-      fetchTrades(0, true);
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
-
-  const fetchTrades = async (currentOffset = 0, isInitial = false) => {
-    try {
-      if (currentOffset === 0) setLoading(true);
-      
-      const queryParams = new URLSearchParams({
-        limit: LIMIT.toString(),
-        skip: currentOffset.toString(),
-        ...(searchQuery && { search: searchQuery })
-      });
-
-      const url = `http://localhost:4000/api/trades?${queryParams}`;
-      
-      const data = await (currentOffset === 0 
-        ? fetchWithCache(url) 
-        : fetch(url).then(res => res.json()));
-      
-      const formattedTrades = data.trades.map((trade: any) => ({
-        id: trade.externalId || trade._id,
-        politicianId: trade.politicianId,
-        name: trade.politicianName,
-        party: trade.party,
-        ticker: trade.ticker,
-        type: trade.transactionType,
-        amount: trade.amountRange,
-        date: new Date(trade.transactionDate || trade.filedDate || Date.now()).toLocaleDateString(),
-        reliability: 90,
-      }));
-
-      // If we got fewer items than limit, no more data
-      if (formattedTrades.length < LIMIT) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
-
-      setTrades(prev => isInitial ? formattedTrades : [...prev, ...formattedTrades]);
-      setOffset(currentOffset + LIMIT);
-    } catch (err) {
-      console.error("Error fetching trades:", err);
-      setError("Failed to load live trade data.");
-    } finally {
-      setLoading(false);
+    if (user) {
+      router.push("/dashboard");
     }
-  };
-
-  const handleLoadMore = () => {
-    fetchTrades(offset);
-  };
-  
-  // No more client-side filtering needed
-  const filteredTrades = trades;
-
-  if (!mounted) return null;
-
-  const toggleTheme = () =>
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  }, [user, router]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] text-zinc-900 dark:text-zinc-200 font-sans transition-colors duration-300">
-      {/* Background Accents */}
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-600/5 dark:bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
-
-      <main className="p-6 lg:p-12 relative">
-        {/* Sticky Header */}
-        <header className="sticky top-0 z-40 bg-zinc-50/80 dark:bg-[#050505]/80 backdrop-blur-md pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2">
-              Nexus Alpha
-            </h1>
-            <p className="text-zinc-500 text-sm font-medium uppercase tracking-[0.2em]">
-              Institutional Transparency Protocol
-            </p>
-          </div>
-        </header>
-
-        {/* Search Bar - Linked to State */}
-        <div className="relative max-w-2xl mb-12 group">
-          <Search
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within:text-cyan-500 transition-colors"
-            size={20}
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search politicians, tickers, or parties..."
-            className="w-full bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/50 py-4 pl-14 pr-6 rounded-2xl outline-none focus:border-cyan-500/50 focus:ring-4 ring-cyan-500/5 transition-all text-lg placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm dark:shadow-none"
-          />
-        </div>
-
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-12 gap-8">
-          {/* Section 1: Whale Leaderboard (Spans 4 columns) */}
-          <div className="col-span-12 lg:col-span-4">
-            <Leaderboard />
-          </div>
-
-          {/* Section 2: Trade Feed (Spans 8 columns) */}
-          <div className="col-span-12 lg:col-span-8">
-            <div
-              className={`grid gap-6 ${
-                viewMode === "grid"
-                  ? "grid-cols-1 md:grid-cols-2"
-                  : "grid-cols-1"
-              }`}
-            >
-              {loading ? (
-                 <div className="col-span-full py-20 flex flex-col items-center justify-center text-zinc-500">
-                    <Loader2 className="w-8 h-8 animate-spin mb-4 text-cyan-500" />
-                    <p>Syncing encrypted trade data...</p>
-                 </div>
-              ) : error ? (
-                <div className="col-span-full py-20 text-center text-red-500 border border-dashed border-red-800/20 rounded-[2rem] bg-red-500/5">
-                  {error}
-                </div>
-              ) : (
-                <>
-                  {filteredTrades.map((trade) => (
-                    <TradeCard key={trade.id} trade={trade} />
-                  ))}
-                  {filteredTrades.length === 0 && (
-                    <div className="col-span-full py-20 text-center text-zinc-500 italic border border-dashed border-zinc-800 rounded-[2rem]">
-                      No protocol matches found for "{searchQuery}"
-                    </div>
-                  )}
-                </>
-              )}
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] text-zinc-900 dark:text-zinc-200 overflow-hidden relative">
+      {/* Background gradients */}
+      <div className="absolute top-0 left-1/4 w-[50rem] h-[50rem] bg-cyan-600/10 blur-[150px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[50rem] h-[50rem] bg-purple-600/10 blur-[150px] rounded-full pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto px-6 pt-8 pb-24 relative z-10 flex flex-col min-h-screen">
+        {/* Navigation */}
+        <nav className="flex justify-between items-center py-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-zinc-900 dark:bg-white rounded-xl flex items-center justify-center shadow-xl">
+              <span className="text-white dark:text-zinc-900 font-bold text-xl leading-none">N</span>
             </div>
-            
-            {/* Load More Button */}
-            {!loading && hasMore && trades.length > 0 && !error && (
-               <div className="mt-12 flex justify-center">
-                  <button 
-                    onClick={handleLoadMore}
-                    className="group relative px-8 py-3 bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 font-bold uppercase text-xs tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-cyan-500/20"
-                  >
-                    Load More Data
-                    <div className="absolute inset-0 rounded-xl ring-2 ring-white/20 dark:ring-black/10 group-hover:ring-cyan-500/50 transition-all" />
-                  </button>
-               </div>
-            )}
+            <span className="text-xl font-bold tracking-tight">Nexus Alpha</span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/login" 
+              className="px-5 py-2.5 text-sm font-medium hover:text-cyan-500 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link 
+              href="/signup" 
+              className="px-5 py-2.5 bg-zinc-900 dark:bg-white text-zinc-50 dark:text-zinc-900 text-sm font-bold rounded-full hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/25"
+            >
+              Get Started
+            </Link>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <main className="flex-1 flex flex-col items-center justify-center text-center mt-12 md:mt-24">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-sm font-medium mb-8 border border-cyan-500/20">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+            </span>
+            Live Institutional Tracker
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl mb-8 leading-tight">
+            Track Congressional Trading & <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-500">Institutional Alpha</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-12">
+            Gain an edge by analyzing real-time financial disclosures from US politicians and powerful institutions. Discover crowded trades, flag suspicious timing, and see the data they don't want you to see.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Link 
+              href="/signup" 
+              className="flex items-center gap-2 px-8 py-4 bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-cyan-500/25 text-lg"
+            >
+              Start Tracking Now <ArrowRight size={20} />
+            </Link>
+            <Link 
+              href="/login" 
+              className="flex items-center gap-2 px-8 py-4 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-lg"
+            >
+              Login to Protocol
+            </Link>
+          </div>
+        </main>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-32">
+          <div className="p-8 rounded-[2rem] bg-white/50 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 backdrop-blur-xl">
+            <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 mb-6">
+              <TrendingUp size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">Live Trade Feed</h3>
+            <p className="text-zinc-500 dark:text-zinc-400">Monitor continuous incoming disclosures from the Senate and House of Representatives as soon as they are filed.</p>
+          </div>
+          
+          <div className="p-8 rounded-[2rem] bg-white/50 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 text-zinc-900/5 dark:text-white/5">
+              <Lock size={120} className="transform rotate-12" />
+            </div>
+            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500 mb-6 relative z-10">
+              <ShieldCheck size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-3 relative z-10">Suspicious Timing</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 relative z-10">Advanced algorithms flag trades executed dangerously close to major market catalysts or confidential briefings.</p>
+          </div>
+          
+          <div className="p-8 rounded-[2rem] bg-white/50 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 backdrop-blur-xl">
+            <div className="w-12 h-12 bg-cyan-500/10 rounded-2xl flex items-center justify-center text-cyan-500 mb-6">
+              <Activity size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">Whale Leaderboard</h3>
+            <p className="text-zinc-500 dark:text-zinc-400">See the most profitable politicians and the most actively traded assets aggregated across the entire government.</p>
           </div>
         </div>
-
-        <footer className="mt-20 py-12 border-t border-zinc-200 dark:border-zinc-900 flex flex-col items-center gap-4 text-zinc-500 text-xs tracking-widest uppercase">
-          Nexus Protocol © 2026 • Encrypted Data Stream
-        </footer>
-      </main>
+      </div>
     </div>
   );
 }

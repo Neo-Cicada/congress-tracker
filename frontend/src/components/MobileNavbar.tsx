@@ -32,11 +32,11 @@ export const MobileNavbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 lg:hidden z-50 px-6 flex items-center justify-between pb-2">
-      <Link href="/">
+      <Link href="/dashboard">
         <MobileNavIcon
           icon={<Activity size={24} />}
           label="Feed"
-          active={isActive("/")} 
+          active={isActive("/dashboard")} 
         />
       </Link>
       <Link href="/ethics">

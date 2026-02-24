@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { PartyPerformanceChart, PopularStocksList } from "../../components/LeaderboardCharts";
+import { PartyPerformanceChart, PopularStocksList } from "../../../components/LeaderboardCharts";
 import { User, TrendingUp, TrendingDown, ArrowRight, ShieldAlert } from "lucide-react";
-import { TradeCard } from "../../components/TradeCard";
+import { TradeCard } from "../../../components/TradeCard";
 import Link from "next/link";
-import { fetchWithCache } from "../../lib/apiCache";
+import { fetchWithCache } from "../../../lib/apiCache";
 
 interface LeaderboardItem {
     rank: number;

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ProfileHeader, Watchlist, CopyTradeControls } from "../../components/ProfileComponents";
-import { TradeCard, Trade } from "../../components/TradeCard";
+import { ProfileHeader, Watchlist } from "../../../components/ProfileComponents";
+import { TradeCard, Trade } from "../../../components/TradeCard";
 import { Activity } from "lucide-react";
 
 // Mock saved trades
@@ -47,7 +47,6 @@ export default function ProfilePage() {
                     {/* 2. Left Column: Settings & Watchlist (Col-4) */}
                     <div className="lg:col-span-4 space-y-8">
                         <Watchlist />
-                        <CopyTradeControls />
                     </div>
 
                     {/* 3. Right Column: Saved Activity (Col-8) */}
