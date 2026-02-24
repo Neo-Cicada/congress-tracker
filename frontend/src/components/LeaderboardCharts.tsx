@@ -2,6 +2,7 @@
 
 import React from "react";
 import { TrendingUp, TrendingDown, Users } from "lucide-react";
+import { fetchWithCache } from "../lib/apiCache";
 
 // --- PARTY PERFORMANCE CHART ---
 export const PartyPerformanceChart = () => {
@@ -11,9 +12,7 @@ export const PartyPerformanceChart = () => {
   React.useEffect(() => {
     const fetchPartyPerformance = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/leaderboard/party-performance");
-        if (!response.ok) throw new Error("Failed to fetch party performance");
-        const result = await response.json();
+        const result = await fetchWithCache("http://localhost:4000/api/leaderboard/party-performance");
         setData(result);
       } catch (error) {
         console.error(error);
@@ -115,9 +114,7 @@ export const PopularStocksList = () => {
     React.useEffect(() => {
         const fetchPopularStocks = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/trades/popular`);
-                if (!res.ok) throw new Error("Failed to fetch crowded trades");
-                const data = await res.json();
+                const data = await fetchWithCache(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/trades/popular`);
                 setStocks(data);
             } catch (err: any) {
                 console.error(err);

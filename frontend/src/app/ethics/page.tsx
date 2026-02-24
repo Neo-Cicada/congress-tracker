@@ -13,6 +13,7 @@ import {
   SuspiciousTrade,
   BehaviorStats
 } from "../../components/EthicsComponents";
+import { fetchWithCache } from "../../lib/apiCache";
 
 interface EthicsData {
     score: number;
@@ -34,8 +35,7 @@ export default function EthicsPage() {
 
   useEffect(() => {
     setMounted(true);
-    fetch('/api/ethics/summary', { cache: 'no-store' })
-        .then(res => res.json())
+    fetchWithCache('http://localhost:4000/api/ethics/summary')
         .then(data => {
             setData(data);
             setLoading(false);

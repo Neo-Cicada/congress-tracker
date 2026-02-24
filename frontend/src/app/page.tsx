@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
 import { TradeCard, Trade } from "../components/TradeCard";
 import { Leaderboard } from "../components/Leaderboard";
+import { fetchWithCache } from "../lib/apiCache";
 import {
   TrendingUp,
   Activity,
@@ -51,11 +52,11 @@ export default function NexusDashboard() {
         ...(searchQuery && { search: searchQuery })
       });
 
-      const response = await fetch(`http://localhost:4000/api/trades?${queryParams}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch trades');
-      }
-      const data = await response.json();
+      const url = `http://localhost:4000/api/trades?${queryParams}`;
+      
+      const data = await (currentOffset === 0 
+        ? fetchWithCache(url) 
+        : fetch(url).then(res => res.json()));
       
       const formattedTrades = data.trades.map((trade: any) => ({
         id: trade.externalId || trade._id,

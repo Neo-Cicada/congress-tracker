@@ -5,6 +5,7 @@ import { PartyPerformanceChart, PopularStocksList } from "../../components/Leade
 import { User, TrendingUp, TrendingDown, ArrowRight, ShieldAlert } from "lucide-react";
 import { TradeCard } from "../../components/TradeCard";
 import Link from "next/link";
+import { fetchWithCache } from "../../lib/apiCache";
 
 interface LeaderboardItem {
     rank: number;
@@ -24,14 +25,11 @@ export default function LeaderboardPage() {
         setMounted(true);
         const fetchLeaderboards = async () => {
             try {
-                const [gainersRes, losersRes, ethicsRes] = await Promise.all([
-                    fetch('http://localhost:4000/api/leaderboard?sort=desc'),
-                    fetch('http://localhost:4000/api/leaderboard?sort=asc'),
-                    fetch('http://localhost:4000/api/ethics/summary')
+                const [gainersData, losersData, ethicsData] = await Promise.all([
+                    fetchWithCache('http://localhost:4000/api/leaderboard?sort=desc'),
+                    fetchWithCache('http://localhost:4000/api/leaderboard?sort=asc'),
+                    fetchWithCache('http://localhost:4000/api/ethics/summary')
                 ]);
-                const gainersData = await gainersRes.json();
-                const losersData = await losersRes.json();
-                const ethicsData = await ethicsRes.json();
                 
                 if (ethicsData && ethicsData.suspiciousTrades) {
                     setSuspiciousTrades(ethicsData.suspiciousTrades.slice(0, 2));
