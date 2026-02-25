@@ -5,6 +5,7 @@ export interface IUser extends Document {
     passwordHash: string;
     firstName?: string;
     lastName?: string;
+    watchlist?: mongoose.Types.ObjectId[];
     createdAt: Date;
 }
 
@@ -28,6 +29,10 @@ const UserSchema: Schema = new Schema({
         type: String,
         trim: true,
     },
+    watchlist: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Politician',
+    }],
     createdAt: {
         type: Date,
         default: Date.now,

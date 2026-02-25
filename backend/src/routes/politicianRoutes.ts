@@ -51,6 +51,22 @@ const getSpyYtdReturn = async (): Promise<number> => {
     return cachedSpyYtd || 0; // Return last known or 0
 };
 
+// GET /api/politician - Search politicians
+router.get('/', async (req, res) => {
+    try {
+        const { search } = req.query;
+        let query = {};
+        if (search) {
+            query = { name: { $regex: String(search), $options: 'i' } };
+        }
+        const politicians = await Politician.find(query).limit(20);
+        res.json(politicians);
+    } catch (error) {
+        console.error('Error fetching politicians list:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // GET /api/politician/:id - Get politician details and analysis
 router.get('/:id', async (req, res) => {
     try {
