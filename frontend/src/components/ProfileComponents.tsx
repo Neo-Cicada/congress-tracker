@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { 
     Settings, 
     Star,
@@ -35,7 +36,7 @@ export const ProfileHeader = () => {
               <div className="flex items-center gap-4">
                   <button 
                     onClick={() => setIsSettingsOpen(true)}
-                    className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                    className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
                       <Settings size={18} />
                   </button>
@@ -121,7 +122,7 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
             <Settings size={20} className="text-cyan-500" />
             Settings
           </h3>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </div>
@@ -160,7 +161,7 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
               <button 
                 type="submit"
                 disabled={loading || !currentPassword || !newPassword}
-                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : "Update Password"}
               </button>
@@ -170,7 +171,7 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
           <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
              <button 
                 onClick={onLogout}
-                className="w-full py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold text-sm hover:bg-red-500/20 transition-colors"
+                className="w-full py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold text-sm hover:bg-red-500/20 transition-colors cursor-pointer"
              >
                 Log Out
              </button>
@@ -188,6 +189,46 @@ export const Watchlist = () => {
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const res = await fetch(`http://localhost:4000/api/politician?search=${encodeURIComponent(searchQuery)}`);
+                const data = await res.json();
+                const results = Array.isArray(data) ? data : (data.politicians || []);
+                setSearchResults(results.slice(0, 5));
+                setShowDropdown(true);
+            } catch (err) {
+                console.error("Search error:", err);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const fetchWatchlist = async () => {
       if (!token) return;
@@ -222,6 +263,29 @@ export const Watchlist = () => {
       }
     };
 
+    const addToWatchlistWithId = async (politicianId: string) => {
+       try {
+           setIsAdding(false);
+           setSearchQuery("");
+           setShowDropdown(false);
+           setSearchResults([]);
+           
+           await fetch("http://localhost:4000/api/users/watchlist", {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}` 
+              },
+              body: JSON.stringify({ politicianId })
+           });
+           
+           fetchWatchlist();
+       } catch (err) {
+           console.error(err);
+           alert("Failed to add to watchlist.");
+       }
+    };
+
     const addToWatchlist = async () => {
        if (!searchQuery) return;
        try {
@@ -230,17 +294,7 @@ export const Watchlist = () => {
            const politician = data.politicians?.[0] || data[0];
            
            if (politician && politician._id) {
-               await fetch("http://localhost:4000/api/users/watchlist", {
-                  method: "POST",
-                  headers: { 
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}` 
-                  },
-                  body: JSON.stringify({ politicianId: politician._id })
-               });
-               setIsAdding(false);
-               setSearchQuery("");
-               fetchWatchlist();
+               await addToWatchlistWithId(politician._id);
            } else {
                alert("Politician not found. Try entering their full name accurately.");
            }
@@ -250,7 +304,7 @@ export const Watchlist = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 relative overflow-hidden transition-colors backdrop-blur-sm">
+        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 relative transition-colors backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-mono font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                     <Star size={18} className="text-amber-500" />
@@ -272,7 +326,7 @@ export const Watchlist = () => {
                 ) : (
                   watchlist.map((item, i) => (
                     <div key={item._id || i} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 hover:border-cyan-500/30 transition-all group">
-                        <div className="flex items-center gap-3">
+                        <Link href={`/politician/${item._id}`} className="flex items-center gap-3 flex-1 cursor-pointer">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-mono font-bold text-xs ${item.party === 'D' ? 'bg-blue-500' : item.party === 'R' ? 'bg-red-500' : 'bg-zinc-500'}`}>
                                 {item.party || '?'}
                             </div>
@@ -284,12 +338,12 @@ export const Watchlist = () => {
                                     {item.chamber}
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                         <div className="text-right flex items-center gap-3">
                              <button 
                                onClick={() => removeFromWatchlist(item._id)}
                                title="Remove from watchlist"
-                               className="text-zinc-400 hover:text-red-500 transition-colors p-2 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                               className="text-zinc-400 hover:text-red-500 transition-colors p-2 opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
                              >
                                <Trash2 size={16} />
                              </button>
@@ -299,27 +353,60 @@ export const Watchlist = () => {
                 )}
                 
                 {isAdding ? (
-                   <div className="flex items-center gap-2 mt-4 fade-in animate-in">
-                      <input 
-                         type="text" 
-                         placeholder="e.g. Nancy Pelosi"
-                         value={searchQuery}
-                         onChange={(e) => setSearchQuery(e.target.value)}
-                         className="flex-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
-                         autoFocus
-                         onKeyDown={(e) => e.key === 'Enter' && addToWatchlist()}
-                      />
-                      <button onClick={addToWatchlist} className="p-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl transition-colors">
-                         <Plus size={18} />
-                      </button>
-                      <button onClick={() => setIsAdding(false)} className="p-2 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 rounded-xl transition-colors text-zinc-600 dark:text-zinc-300">
-                         <X size={18} />
-                      </button>
+                   <div className="relative mt-4 fade-in animate-in" ref={dropdownRef}>
+                      <div className="flex items-center gap-2">
+                         <input 
+                            type="text" 
+                            placeholder="e.g. Nancy Pelosi"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => { if (searchQuery.trim()) setShowDropdown(true); }}
+                            className="flex-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
+                            autoFocus
+                            onKeyDown={(e) => e.key === 'Enter' && addToWatchlist()}
+                         />
+                         <button onClick={addToWatchlist} className="p-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl transition-colors shrink-0 cursor-pointer">
+                            <Plus size={18} />
+                         </button>
+                         <button onClick={() => { setIsAdding(false); setSearchQuery(""); setShowDropdown(false); }} className="p-2 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 rounded-xl transition-colors text-zinc-600 dark:text-zinc-300 shrink-0 cursor-pointer">
+                            <X size={18} />
+                         </button>
+                      </div>
+
+                      {showDropdown && (
+                          <div className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                              {isSearching ? (
+                                  <div className="p-4 text-center text-zinc-500 text-sm flex justify-center items-center gap-2">
+                                      <Loader2 size={16} className="animate-spin" /> Searching...
+                                  </div>
+                              ) : searchResults.length > 0 ? (
+                                  searchResults.map((pol) => (
+                                      <button
+                                          key={pol._id}
+                                          onClick={() => addToWatchlistWithId(pol._id)}
+                                          className="w-full text-left px-4 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 flex flex-col transition-colors border-b border-zinc-100 dark:border-zinc-700/50 last:border-0 cursor-pointer"
+                                      >
+                                          <div className="flex items-center justify-between w-full">
+                                              <span className="font-bold text-zinc-900 dark:text-white text-sm">{pol.name}</span>
+                                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pol.party === 'D' ? 'bg-blue-500/10 text-blue-500' : pol.party === 'R' ? 'bg-red-500/10 text-red-500' : 'bg-zinc-500/10 text-zinc-500'}`}>
+                                                  {pol.party || 'IND'}
+                                              </span>
+                                          </div>
+                                          <span className="text-xs text-zinc-500">{pol.chamber}</span>
+                                      </button>
+                                  ))
+                              ) : searchQuery.trim().length > 0 ? (
+                                  <div className="p-4 text-center text-zinc-500 text-sm">
+                                      No politicians found.
+                                  </div>
+                              ) : null}
+                          </div>
+                      )}
                    </div>
                 ) : (
                   <button 
                     onClick={() => setIsAdding(true)}
-                    className="w-full mt-2 py-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 text-[10px] font-mono font-bold uppercase tracking-widest hover:border-cyan-500 hover:text-cyan-500 transition-all font-bold"
+                    className="w-full mt-2 py-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 text-[10px] font-mono font-bold uppercase tracking-widest hover:border-cyan-500 hover:text-cyan-500 transition-all cursor-pointer"
                   >
                       + Add Protocol
                   </button>
