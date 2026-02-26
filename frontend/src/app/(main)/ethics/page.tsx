@@ -14,6 +14,7 @@ import {
   BehaviorStats
 } from "../../../components/EthicsComponents";
 import { fetchWithCache } from "../../../lib/apiCache";
+import { getApiUrl } from "../../../lib/api";
 
 interface EthicsData {
     score: number;
@@ -35,7 +36,7 @@ export default function EthicsPage() {
 
   useEffect(() => {
     setMounted(true);
-    fetchWithCache('http://localhost:4000/api/ethics/summary')
+    fetchWithCache(getApiUrl('ethics/summary'))
         .then(data => {
             setData(data);
             setLoading(false);

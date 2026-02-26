@@ -2,10 +2,12 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
     email: string;
-    passwordHash: string;
+    passwordHash?: string;
+    googleId?: string;
     firstName?: string;
     lastName?: string;
     watchlist?: mongoose.Types.ObjectId[];
+    savedTrades?: mongoose.Types.ObjectId[];
     createdAt: Date;
 }
 
@@ -19,7 +21,12 @@ const UserSchema: Schema = new Schema({
     },
     passwordHash: {
         type: String,
-        required: true,
+        required: false, // Changed to false for Google Auth
+    },
+    googleId: {          // Added for Google Auth
+        type: String,
+        unique: true,
+        sparse: true,    // Allows null/undefined values to be unique
     },
     firstName: {
         type: String,
@@ -32,6 +39,10 @@ const UserSchema: Schema = new Schema({
     watchlist: [{
         type: Schema.Types.ObjectId,
         ref: 'Politician',
+    }],
+    savedTrades: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Trade',
     }],
     createdAt: {
         type: Date,

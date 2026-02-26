@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Crown, TrendingUp, User, ChevronRight } from "lucide-react";
 import { fetchWithCache } from "../lib/apiCache";
+import { getApiUrl } from "../lib/api";
 
 interface LeaderboardEntry {
   rank: number;
@@ -74,7 +75,7 @@ const Leaderboard = () => {
   React.useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const data = await fetchWithCache("http://localhost:4000/api/leaderboard");
+        const data = await fetchWithCache(getApiUrl("leaderboard"));
         
         const mapped: LeaderboardEntry[] = data.map((p: any, index: number) => ({
           rank: index + 1,

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from "next/link";
-import { ArrowUpRight, ArrowDownRight, ChevronRight, Clock } from 'lucide-react';
-
+import { ArrowUpRight, ArrowDownRight, ChevronRight, Clock, Bookmark } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 export interface Trade {
   id: string;
   politicianId?: string;
@@ -18,9 +18,11 @@ export interface Trade {
 
 export const TradeCard: React.FC<{ trade: Trade }> = ({ trade }) => {
   const isBuy = trade.type.toLowerCase() === 'buy';
+  const { savedTrades, toggleSavedTrade, user } = useAuth();
+  const isSaved = savedTrades?.includes(trade.id);
 
   return (
-    <div className="group bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 hover:border-cyan-500/30 rounded-[2rem] p-6 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5">
+    <div className="relative group bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/50 hover:border-cyan-500/30 rounded-[2rem] p-6 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5">
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
           {/* Party Indicator with better contrast */}
@@ -47,13 +49,28 @@ export const TradeCard: React.FC<{ trade: Trade }> = ({ trade }) => {
           </div>
         </div>
         
-        {/* Transaction Badge */}
-        <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-colors ${
-          isBuy 
-            ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20' 
-            : 'border-rose-500/20 bg-rose-500/5 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/20'
-        }`}>
-          {trade.type}
+        {/* Top Right: Transaction Badge & Bookmark */}
+        <div className="flex items-center gap-3">
+          {user && (
+            <button 
+              onClick={(e) => { e.preventDefault(); toggleSavedTrade(trade.id); }}
+              className={`p-2 rounded-xl flex items-center justify-center border transition-all duration-300 z-10 hover:scale-110 active:scale-95 cursor-pointer ${
+                isSaved 
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.2)]' 
+                  : 'bg-zinc-100/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700/50 text-zinc-400 hover:text-cyan-500 hover:border-cyan-500/30 hover:bg-cyan-500/5'
+              }`}
+              title={isSaved ? "Remove from Saved Alpha" : "Save to Alpha"}
+            >
+              <Bookmark size={14} className={isSaved ? "fill-current" : ""} />
+            </button>
+          )}
+          <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-colors ${
+            isBuy 
+              ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20' 
+              : 'border-rose-500/20 bg-rose-500/5 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/20'
+          }`}>
+            {trade.type}
+          </div>
         </div>
       </div>
 

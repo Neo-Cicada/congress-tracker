@@ -13,6 +13,8 @@ import politicianRoutes from './routes/politicianRoutes';
 import ethicsRoutes from './routes/ethicsRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import { validateEnv } from './config/env';
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -50,7 +52,11 @@ if (process.env.NODE_ENV !== 'production') {
   app.use('/api/dev', devRouter);
 }
 
+// Global Error Handler
+app.use(errorHandler);
+
 const start = async () => {
+  validateEnv();
   await connectDB();
   setupTradeSyncCron();
 

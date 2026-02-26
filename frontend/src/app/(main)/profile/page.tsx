@@ -3,35 +3,55 @@
 import React, { useState, useEffect } from "react";
 import { ProfileHeader, Watchlist } from "../../../components/ProfileComponents";
 import { TradeCard, Trade } from "../../../components/TradeCard";
-import { Activity } from "lucide-react";
-
-// Mock saved trades
-const SAVED_TRADES: Trade[] = [
-    {
-      id: "s1",
-      name: "Nancy Pelosi",
-      party: "D",
-      ticker: "PANW",
-      type: "Buy",
-      amount: "$1M+",
-      date: "Feb 12",
-      reliability: 98,
-    },
-    {
-      id: "s2",
-      name: "Rick Scott",
-      party: "R",
-      ticker: "WMT",
-      type: "Sell",
-      amount: "$500K",
-      date: "Jan 30",
-      reliability: 92,
-    }
-];
+import { Activity, Loader2 } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
+import { getApiUrl } from "../../../lib/api";
 
 export default function ProfilePage() {
     const [mounted, setMounted] = useState(false);
+    const { token, savedTrades: savedTradeIds } = useAuth();
+    const [savedTradesData, setSavedTradesData] = useState<Trade[]>([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => setMounted(true), []);
+
+    useEffect(() => {
+        const fetchSavedTradesData = async () => {
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+            try {
+                const res = await fetch(getApiUrl("users/saved-trades"), {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const formattedTrades: Trade[] = data.map((t: any) => ({
+                        id: t._id,
+                        politicianId: t.politicianId,
+                        name: t.politicianName || 'Unknown',
+                        party: t.party || 'IND',
+                        ticker: t.ticker,
+                        type: t.transactionType,
+                        amount: t.amountRange || 'Unknown',
+                        date: new Date(t.transactionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        reliability: 95
+                    }));
+                    // Sort descending by date locally just in case
+                    formattedTrades.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                    setSavedTradesData(formattedTrades);
+                }
+            } catch (err) {
+                console.error("Error fetching saved trades data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSavedTradesData();
+    }, [token, savedTradeIds.length]);
+
     if (!mounted) return null;
 
     return (
@@ -51,28 +71,39 @@ export default function ProfilePage() {
 
                     {/* 3. Right Column: Saved Activity (Col-8) */}
                     <div className="lg:col-span-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
-                                <Activity size={20} />
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                                    <Activity size={20} />
+                                </div>
+                                <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Saved Alpha</h3>
                             </div>
-                            <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Saved Alpha</h3>
+                            <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
+                                {savedTradesData.length} Saved Trades
+                            </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {SAVED_TRADES.map((trade) => (
-                                <TradeCard key={trade.id} trade={trade} />
-                            ))}
-                            {/* Upsell / Empty State */}
-                            <div className="border border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 flex flex-col items-center justify-center text-center gap-4 min-h-[200px] hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer group">
-                                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-cyan-500 group-hover:bg-cyan-500/10 transition-colors">
-                                    <Activity size={24} />
+                        {loading ? (
+                            <div className="flex items-center justify-center p-12 min-h-[300px]">
+                                <Loader2 size={32} className="animate-spin text-cyan-500" />
+                            </div>
+                        ) : savedTradesData.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {savedTradesData.map((trade) => (
+                                    <TradeCard key={trade.id} trade={trade} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="border border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 flex flex-col items-center justify-center text-center gap-4 min-h-[300px] bg-white/50 dark:bg-zinc-900/10 backdrop-blur-sm">
+                                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 flex items-center justify-center text-zinc-400">
+                                    <Activity size={28} />
                                 </div>
                                 <div>
-                                    <div className="font-bold text-zinc-900 dark:text-zinc-200">Explore More Trades</div>
-                                    <p className="text-xs text-zinc-500 mt-1">Find and pin more suspicious activity to your board.</p>
+                                    <div className="font-bold text-zinc-900 dark:text-zinc-200 text-lg">No Saved Alpha</div>
+                                    <p className="text-sm text-zinc-500 mt-2 max-w-[250px] mx-auto leading-relaxed">Find and bookmark suspicious trades across the platform to pin them to your board.</p>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
              </div>

@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { TradeCard, Trade } from "../../../components/TradeCard";
 import { Leaderboard } from "../../../components/Leaderboard";
 import { fetchWithCache } from "../../../lib/apiCache";
+import { getApiUrl } from "../../../lib/api";
 import {
   TrendingUp,
   Activity,
@@ -52,7 +53,7 @@ export default function NexusDashboard() {
         ...(searchQuery && { search: searchQuery })
       });
 
-      const url = `http://localhost:4000/api/trades?${queryParams}`;
+      const url = getApiUrl(`trades?${queryParams}`);
       
       const data = await (currentOffset === 0 
         ? fetchWithCache(url) 

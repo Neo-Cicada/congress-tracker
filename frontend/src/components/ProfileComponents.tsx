@@ -12,6 +12,7 @@ import {
     Loader2
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getApiUrl } from "../lib/api";
 
 // --- 1. USER PROFILE HEADER ---
 export const ProfileHeader = () => {
@@ -90,7 +91,7 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
     setMessage({ type: '', text: '' });
 
     try {
-      const res = await fetch("http://localhost:4000/api/users/password", {
+      const res = await fetch(getApiUrl("users/password"), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -204,7 +205,7 @@ export const Watchlist = () => {
         const delayDebounceFn = setTimeout(async () => {
             setIsSearching(true);
             try {
-                const res = await fetch(`http://localhost:4000/api/politician?search=${encodeURIComponent(searchQuery)}`);
+                const res = await fetch(getApiUrl(`politician?search=${encodeURIComponent(searchQuery)}`));
                 const data = await res.json();
                 const results = Array.isArray(data) ? data : (data.politicians || []);
                 setSearchResults(results.slice(0, 5));
@@ -233,7 +234,7 @@ export const Watchlist = () => {
     const fetchWatchlist = async () => {
       if (!token) return;
       try {
-        const res = await fetch("http://localhost:4000/api/users/watchlist", {
+        const res = await fetch(getApiUrl("users/watchlist"), {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -253,7 +254,7 @@ export const Watchlist = () => {
 
     const removeFromWatchlist = async (id: string) => {
       try {
-        await fetch(`http://localhost:4000/api/users/watchlist/${id}`, {
+        await fetch(getApiUrl(`users/watchlist/${id}`), {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -270,7 +271,7 @@ export const Watchlist = () => {
            setShowDropdown(false);
            setSearchResults([]);
            
-           await fetch("http://localhost:4000/api/users/watchlist", {
+           await fetch(getApiUrl("users/watchlist"), {
               method: "POST",
               headers: { 
                 "Content-Type": "application/json",
@@ -289,7 +290,7 @@ export const Watchlist = () => {
     const addToWatchlist = async () => {
        if (!searchQuery) return;
        try {
-           const res = await fetch(`http://localhost:4000/api/politician?search=${encodeURIComponent(searchQuery)}`);
+           const res = await fetch(getApiUrl(`politician?search=${encodeURIComponent(searchQuery)}`));
            const data = await res.json();
            const politician = data.politicians?.[0] || data[0];
            

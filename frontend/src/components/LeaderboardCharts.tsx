@@ -3,6 +3,7 @@
 import React from "react";
 import { TrendingUp, TrendingDown, Users } from "lucide-react";
 import { fetchWithCache } from "../lib/apiCache";
+import { getApiUrl } from "../lib/api";
 
 // --- PARTY PERFORMANCE CHART ---
 export const PartyPerformanceChart = () => {
@@ -12,7 +13,7 @@ export const PartyPerformanceChart = () => {
   React.useEffect(() => {
     const fetchPartyPerformance = async () => {
       try {
-        const result = await fetchWithCache("http://localhost:4000/api/leaderboard/party-performance");
+        const result = await fetchWithCache(getApiUrl("leaderboard/party-performance"));
         setData(result);
       } catch (error) {
         console.error(error);
@@ -114,7 +115,7 @@ export const PopularStocksList = () => {
     React.useEffect(() => {
         const fetchPopularStocks = async () => {
             try {
-                const data = await fetchWithCache(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/trades/popular`);
+                const data = await fetchWithCache(getApiUrl("trades/popular"));
                 setStocks(data);
             } catch (err: any) {
                 console.error(err);

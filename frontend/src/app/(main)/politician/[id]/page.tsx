@@ -6,7 +6,7 @@ import { TradeCard, Trade } from "../../../../components/TradeCard";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-
+import { getApiUrl } from "../../../../lib/api";
 
 
 export default function PoliticianPage() {
@@ -22,7 +22,7 @@ export default function PoliticianPage() {
         const fetchPoliticianData = async () => {
             if (!params?.id) return;
             try {
-                const res = await fetch(`http://localhost:4000/api/politician/${params.id}`);
+                const res = await fetch(getApiUrl(`politician/${params.id}`));
                 if (!res.ok) throw new Error('Failed to fetch politician data');
                 const json = await res.json();
                 console.log(json);
