@@ -49,7 +49,7 @@ export default function PoliticianPage() {
          return (
             <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] flex items-center justify-center flex-col gap-4">
                 <div className="text-red-500 font-mono tracking-widest">{error || 'POLITICIAN NOT FOUND'}</div>
-                <Link href="/" className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg text-xs font-bold uppercase">Back to Home</Link>
+                <Link href="/dashboard" className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg text-xs font-bold uppercase">Back to Home</Link>
             </div>
          );
     }
@@ -77,7 +77,7 @@ export default function PoliticianPage() {
             <main className="p-6 lg:p-12 relative animate-in fade-in duration-500">
                  {/* Back Button */}
                  <div className="mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-cyan-500 transition-colors bg-white dark:bg-zinc-900/50 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                    <Link href="/dashboard" className="inline-flex items-center gap-2 text-zinc-500 hover:text-cyan-500 transition-colors bg-white dark:bg-zinc-900/50 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
                         <ArrowLeft size={16} />
                         <span className="text-xs font-bold uppercase tracking-widest">Back to Dashboard</span>
                     </Link>

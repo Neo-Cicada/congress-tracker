@@ -60,7 +60,7 @@ export default function NexusDashboard() {
         : fetch(url).then(res => res.json()));
       
       const formattedTrades = data.trades.map((trade: any) => ({
-        id: trade.externalId || trade._id,
+        id: trade._id,
         politicianId: trade.politicianId,
         name: trade.politicianName,
         party: trade.party,

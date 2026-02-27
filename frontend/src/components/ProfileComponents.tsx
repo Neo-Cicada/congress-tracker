@@ -77,7 +77,7 @@ export const ProfileHeader = () => {
 
 // --- SETTINGS MODAL ---
 const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: () => void }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -130,44 +130,46 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
         
         <div className="p-6 space-y-8">
           {/* Change Password */}
-          <div>
-            <h4 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-              <Lock size={16} />
-              Change Password
-            </h4>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div>
-                <input 
-                  type="password"
-                  placeholder="Current Password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <input 
-                  type="password"
-                  placeholder="New Password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              {message.text && (
-                <div className={`text-xs ${message.type === 'error' ? 'text-red-500' : 'text-emerald-500'}`}>
-                  {message.text}
+          {user?.hasPassword !== false && (
+            <div>
+              <h4 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                <Lock size={16} />
+                Change Password
+              </h4>
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div>
+                  <input 
+                    type="password"
+                    placeholder="Current Password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
+                  />
                 </div>
-              )}
-              <button 
-                type="submit"
-                disabled={loading || !currentPassword || !newPassword}
-                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loading ? <Loader2 size={16} className="animate-spin" /> : "Update Password"}
-              </button>
-            </form>
-          </div>
+                <div>
+                  <input 
+                    type="password"
+                    placeholder="New Password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
+                  />
+                </div>
+                {message.text && (
+                  <div className={`text-xs ${message.type === 'error' ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {message.text}
+                  </div>
+                )}
+                <button 
+                  type="submit"
+                  disabled={loading || !currentPassword || !newPassword}
+                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : "Update Password"}
+                </button>
+              </form>
+            </div>
+          )}
 
           <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
              <button 

@@ -47,6 +47,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
                 firstName: user.firstName,
                 lastName: user.lastName,
                 token: generateToken(user.id),
+                hasPassword: true,
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -71,6 +72,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 token: generateToken(user.id),
+                hasPassword: true,
             });
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
@@ -87,12 +89,17 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             res.status(401).json({ message: 'User not found in Request' });
             return;
         }
-        const user = await User.findById(req.user.id).select('-passwordHash');
+        const user = await User.findById(req.user.id);
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        res.json(user);
+
+        const userObj = user.toObject();
+        const hasPassword = !!userObj.passwordHash;
+        delete userObj.passwordHash;
+
+        res.json({ ...userObj, hasPassword });
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({ message: 'Server error' });
@@ -108,12 +115,18 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
-        const ticket = await client.verifyIdToken({
-            idToken: googleToken,
-            audience: process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE',
+        // The frontend useGoogleLogin hook returns an access_token, not a JWT id_token.
+        // We use this access_token to fetch the user's profile from Google.
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${googleToken}` }
         });
 
-        const payload = ticket.getPayload();
+        if (!response.ok) {
+            res.status(400).json({ message: 'Invalid Google access token' });
+            return;
+        }
+
+        const payload = await response.json();
 
         if (!payload || !payload.email) {
             res.status(400).json({ message: 'Invalid Google token payload' });
@@ -146,6 +159,7 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
             firstName: user.firstName,
             lastName: user.lastName,
             token: generateToken(user.id),
+            hasPassword: !!user.passwordHash,
         });
 
     } catch (error) {

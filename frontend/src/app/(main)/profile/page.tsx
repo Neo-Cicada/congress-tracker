@@ -15,6 +15,11 @@ export default function ProfilePage() {
 
     useEffect(() => setMounted(true), []);
 
+    // Sync local state when a trade is unsaved from the profile
+    useEffect(() => {
+        setSavedTradesData(prevData => prevData.filter(trade => savedTradeIds.includes(trade.id)));
+    }, [savedTradeIds]);
+
     useEffect(() => {
         const fetchSavedTradesData = async () => {
             if (!token) {
@@ -49,8 +54,11 @@ export default function ProfilePage() {
             }
         };
 
-        fetchSavedTradesData();
-    }, [token, savedTradeIds.length]);
+        // Only fetch on initial mount or full refresh, trust local sync effect for deletions
+        if (savedTradesData.length === 0) {
+            fetchSavedTradesData();
+        }
+    }, [token]);
 
     if (!mounted) return null;
 

@@ -8,6 +8,7 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
+  hasPassword?: boolean;
 }
 
 interface AuthContextType {
