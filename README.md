@@ -8,7 +8,7 @@ A comprehensive web application that tracks stock trades made by members of the 
 - **Saved Alpha**: Save specific trades that catch your eye to your profile for quick reference and analysis.
 - **Interactive Dashboards**: Visualize trading data and portfolio impacts using interactive charts (powered by Recharts).
 - **Secure Authentication**: Supports both local email/password registration and Google OAuth for seamless login.
-- **Automated Data Fetching**: The backend uses scheduled cron jobs and the Yahoo Finance API for up-to-date market information.
+- **Automated Data Fetching**: The backend uses the Quiver Quantitative API for congressional trading activity and Yahoo Finance API for market data, automated via scheduled cron jobs.
 
 ## Tech Stack
 
@@ -24,7 +24,71 @@ A comprehensive web application that tracks stock trades made by members of the 
 - **Framework**: [Express.js](https://expressjs.com/)
 - **Database**: [MongoDB](https://www.mongodb.com/) (Mongoose)
 - **Authentication**: JWT & `google-auth-library`
-- **Data & Scheduling**: `yahoo-finance2` and `node-cron`
+- **Data & Scheduling**: `axios` (Quiver API), `yahoo-finance2`, and `node-cron`
+
+## Architecture Overview
+
+```mermaid
+graph TD
+    %% Styling
+    classDef frontend fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:white,font-weight:bold
+    classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:white,font-weight:bold
+    classDef database fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:white,font-weight:bold
+    classDef external fill:#6b7280,stroke:#374151,stroke-width:2px,color:white,font-weight:bold
+    classDef component fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#1e3a8a
+
+    %% Nodes
+    USER((User\\nBrowser))
+    
+    subgraph Frontend [Next.js Frontend]
+        UI[UI Components\\nTailwind & Recharts]
+        AUTH_CTX[Auth Context]
+        API_SVC[API Services]
+        
+        UI --> AUTH_CTX
+        UI --> API_SVC
+    end
+    
+    subgraph Backend [Node/Express Backend]
+        API_ROUTES[API Routes\\nControllers]
+        AUTH_MW[Auth Middleware]
+        CRON[Cron Jobs\\nData Fetching]
+        DB_MODELS[Mongoose Models]
+        
+        API_ROUTES --> AUTH_MW
+        API_ROUTES --> DB_MODELS
+        CRON --> DB_MODELS
+    end
+    
+    subgraph Storage [Database]
+        MONGO[(MongoDB)]
+    end
+    
+    subgraph External_Services [External APIs]
+        GOOGLE[Google OAuth]
+        QUIVER[Quiver Quantitative API\\nCongress Trades]
+        YAHOO[Yahoo Finance API\\nMarket Data]
+    end
+
+    %% Connections
+    USER <--> Frontend
+    USER --> GOOGLE
+    
+    API_SVC <-->|REST API / JWT| API_ROUTES
+    AUTH_CTX <-->|Validate Token| GOOGLE
+    AUTH_MW <-->|Verify JWT| AUTH_CTX
+    
+    DB_MODELS <--> MONGO
+    
+    CRON -->|Fetch Trades| QUIVER
+    CRON -->|Fetch Prices| YAHOO
+
+    %% Apply Classes
+    class Frontend,UI,AUTH_CTX,API_SVC frontend
+    class Backend,API_ROUTES,AUTH_MW,CRON,DB_MODELS backend
+    class Storage,MONGO database
+    class External_Services,GOOGLE,QUIVER,YAHOO external
+```
 
 ## Getting Started
 
@@ -52,6 +116,7 @@ A comprehensive web application that tracks stock trades made by members of the 
    MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret_key
    GOOGLE_CLIENT_ID=your_google_client_id
+   QUIVER_API_KEY=your_quiver_api_key
    ```
    Start the backend development server:
    ```bash
