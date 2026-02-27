@@ -16,18 +16,6 @@ export const committeeSectorMap: Record<string, string[]> = {
     "Foreign Affairs": ["Industrials", "Energy"]
 };
 
-// Mock assignment list to give some random people committees to work with since we don't have this API
-export const mockPoliticianCommittees: Record<string, string[]> = {
-    "Nancy Pelosi": ["Ways and Means", "Intelligence"],
-    "Ro Khanna": ["Armed Services", "Agriculture, Nutrition, and Forestry"],
-    "Tommy Tuberville": ["Armed Services", "Health, Education, Labor, and Pensions", "Agriculture, Nutrition, and Forestry"],
-    "Dan Crenshaw": ["Energy and Commerce", "Intelligence"],
-    "Josh Gottheimer": ["Financial Services", "Intelligence"],
-    "Sheldon Whitehouse": ["Environment and Public Works", "Finance", "Budget"],
-    "Rick Scott": ["Armed Services", "Commerce, Science, and Transportation", "Homeland Security"],
-    "Michael McCaul": ["Foreign Affairs", "Homeland Security"]
-};
-
 /**
  * Returns a list of conflicting sectors for given committees.
  */
@@ -40,23 +28,3 @@ export const getConflictingSectors = (committees: string[]): string[] => {
     return Array.from(sectors);
 };
 
-/**
- * Randomly assigns committees to a politician if they aren't in the hardcoded list.
- */
-export const assignMockCommittees = (politicianName: string): string[] => {
-    if (mockPoliticianCommittees[politicianName]) {
-        return mockPoliticianCommittees[politicianName];
-    }
-
-    // Random assignment for demo so we have data
-    const allCommittees = Object.keys(committeeSectorMap);
-    const numCommittees = Math.floor(Math.random() * 3) + 1; // 1 to 3 committees
-    const assigned = new Set<string>();
-
-    while (assigned.size < numCommittees) {
-        const randomIdx = Math.floor(Math.random() * allCommittees.length);
-        assigned.add(allCommittees[randomIdx]);
-    }
-
-    return Array.from(assigned);
-};

@@ -4,7 +4,6 @@ import { NormalizedTrade } from './congressApi';
 import YahooFinance from 'yahoo-finance2';
 
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
-import { assignMockCommittees } from '../utils/committeeSectors';
 
 const upsertPolitician = async (trade: NormalizedTrade): Promise<IPolitician> => {
   const filter = trade.politicianExternalId
@@ -18,7 +17,7 @@ const upsertPolitician = async (trade: NormalizedTrade): Promise<IPolitician> =>
     state: trade.state,
     externalId: trade.politicianExternalId,
     $setOnInsert: {
-      committees: assignMockCommittees(trade.politicianName)
+      committees: []
     }
   };
 
