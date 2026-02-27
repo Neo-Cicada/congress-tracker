@@ -197,9 +197,9 @@ const Leaderboard = () => {
 
       {/* FOOTER CTA */}
       <div className="mt-10 pt-6 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center justify-center">
-        <button className="flex items-center gap-1 text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest hover:gap-2 transition-all">
+        <Link href="/leaderboard" className="flex items-center gap-1 text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest hover:gap-2 transition-all">
           View All Whales <ChevronRight size={14} />
-        </button>
+        </Link>
       </div>
     </div>
   );
