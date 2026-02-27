@@ -54,7 +54,7 @@ export const ProfileHeader = () => {
                       <div>
                           <div className="flex items-center gap-2 mb-1">
                               <h2 className="text-xl md:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                                  {user?.firstName || user?.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "Congress Tracker User"}
+                                  {user?.firstName || user?.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "Nexus Alpha User"}
                               </h2>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">

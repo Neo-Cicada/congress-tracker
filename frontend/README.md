@@ -24,8 +24,8 @@
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/Neo-Cicada/congress-tracker.git
-    cd congress-tracker/frontend
+    git clone https://github.com/Neo-Cicada/nexus-alpha.git
+    cd nexus-alpha/frontend
     ```
 
 2.  **Install dependencies:**
