@@ -9,7 +9,10 @@ import { AuthRequest } from '../middleware/authMiddleware';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE');
 
 const generateToken = (id: string) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET || 'fallback_secret', {
+    if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET environment variable is not configured');
+    }
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: '30d',
     });
 };
@@ -95,11 +98,14 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        const userObj = user.toObject();
-        const hasPassword = !!userObj.passwordHash;
-        delete userObj.passwordHash;
-
-        res.json({ ...userObj, hasPassword });
+        // Only return whitelisted fields — never spread the full Mongoose document
+        res.json({
+            _id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            hasPassword: !!user.passwordHash,
+        });
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({ message: 'Server error' });

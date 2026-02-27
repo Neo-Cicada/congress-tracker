@@ -25,7 +25,6 @@ export default function PoliticianPage() {
                 const res = await fetch(getApiUrl(`politician/${params.id}`));
                 if (!res.ok) throw new Error('Failed to fetch politician data');
                 const json = await res.json();
-                console.log(json);
                 setData(json);
             } catch (err) {
                 console.error(err);

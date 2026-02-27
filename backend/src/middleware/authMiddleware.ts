@@ -11,7 +11,11 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction): vo
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { id: string };
+            if (!process.env.JWT_SECRET) {
+                res.status(500).json({ message: 'Server configuration error' });
+                return;
+            }
+            const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string };
 
             req.user = { id: decoded.id };
             next();
