@@ -55,18 +55,25 @@ export default function PoliticianPage() {
     }
 
     // Adapting backend trade to TradeCard props:
-    const formattedTrades = data.trades.map((t: any) => ({
-        id: t._id,
-        name: data.politician.name,
-        party: data.politician.party,
-        ticker: t.ticker,
-        type: t.transactionType,
-        amount: t.amountRange,
-        date: new Date(t.transactionDate).toLocaleDateString(),
-        reliability: 85, // Mock reliability for now
-        disableLink: true, // Disable link on politician page
-        // TradeCard visual depends on these
-    }));
+    const formattedTrades: any[] = [];
+    const seen = new Set<string>();
+    for (const t of data.trades) {
+        const sig = `${data.politician.name}|${t.ticker}|${t.transactionType}|${new Date(t.transactionDate).toLocaleDateString()}|${t.amountRange}`;
+        if (!seen.has(sig)) {
+            seen.add(sig);
+            formattedTrades.push({
+                id: t._id,
+                name: data.politician.name,
+                party: data.politician.party,
+                ticker: t.ticker,
+                type: t.transactionType,
+                amount: t.amountRange,
+                date: new Date(t.transactionDate).toLocaleDateString(),
+                reliability: 85, // Mock reliability for now
+                disableLink: true, // Disable link on politician page
+            });
+        }
+    }
 
     const politicianReturn = data.comparison?.politicianYtd || 0;
     const spyReturn = data.comparison?.spyYtd || 0;

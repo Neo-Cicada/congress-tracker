@@ -78,7 +78,21 @@ export default function NexusDashboard() {
         setHasMore(true);
       }
 
-      setTrades(prev => isInitial ? formattedTrades : [...prev, ...formattedTrades]);
+      setTrades(prev => {
+        const combined = isInitial ? formattedTrades : [...prev, ...formattedTrades];
+        const uniqueTrades: any[] = [];
+        const seen = new Set<string>();
+        
+        for (const t of combined) {
+          const sig = `${t.name}|${t.ticker}|${t.type}|${t.date}|${t.amount}`;
+          if (!seen.has(sig)) {
+            seen.add(sig);
+            uniqueTrades.push(t);
+          }
+        }
+        return uniqueTrades;
+      });
+      
       setOffset(currentOffset + LIMIT);
     } catch (err) {
       console.error("Error fetching trades:", err);
