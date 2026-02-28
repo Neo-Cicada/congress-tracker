@@ -108,9 +108,9 @@ export const TradeCard: React.FC<{ trade: Trade }> = ({ trade }) => {
             <div className={`w-2 h-2 rounded-full ${trade.reliability > 90 ? 'bg-cyan-500 animate-pulse' : 'bg-zinc-500'}`} />
             <span className="text-[9px] text-zinc-400 font-medium uppercase tracking-tighter">Verified Stream</span>
           </div>
-          <button className="flex items-center gap-1 text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest hover:text-cyan-500 transition-all">
+          <Link href={`/politician/${trade.politicianId || trade.id}`} className="flex items-center gap-1 text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest hover:text-cyan-500 transition-all cursor-pointer">
             Analysis <ChevronRight size={14} />
-          </button>
+          </Link>
         </div>
       </div>
     </div>
