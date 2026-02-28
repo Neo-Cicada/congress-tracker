@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   creator: "Nexus Alpha",
   publisher: "Nexus Alpha",
   icons: {
-    icon: "/logo.png",
+    icon: "/favicon.svg",
     apple: "/logo.png",
   },
   openGraph: {
