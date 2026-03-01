@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ProfileHeader, Watchlist, SubscriptionCard } from "../../../components/ProfileComponents";
+import { ProfileHeader, Watchlist } from "../../../components/ProfileComponents";
 import { TradeCard, Trade } from "../../../components/TradeCard";
 import { Activity, Loader2 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
@@ -74,7 +74,6 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* 2. Left Column: Settings & Watchlist (Col-4) */}
                     <div className="lg:col-span-4 space-y-8">
-                        <SubscriptionCard />
                         <Watchlist />
                     </div>
 

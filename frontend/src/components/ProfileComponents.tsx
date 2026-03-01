@@ -85,42 +85,27 @@ export const ProfileHeader = () => {
 
 // --- SETTINGS MODAL ---
 const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: () => void }) => {
-  const { token, user } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const { token, subscription, isPremium, refreshSubscription } = useAuth();
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword) return;
-
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-
+  const handleAction = async (action: 'cancel' | 'resume' | 'portal') => {
+    if (action === 'cancel' && !confirm('Are you sure? You\'ll keep access until the billing period ends.')) return;
+    setActionLoading(action);
     try {
-      const res = await fetch(getApiUrl("users/password"), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ currentPassword, newPassword })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setMessage({ type: 'success', text: "Password updated successfully!" });
-        setCurrentPassword("");
-        setNewPassword("");
+      if (action === 'portal') {
+        const res = await fetch(getApiUrl('subscription/portal'), {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.portalUrl) window.open(data.portalUrl, '_blank');
       } else {
-        setMessage({ type: 'error', text: data.message || "Failed to update password" });
+        const res = await fetch(getApiUrl(`subscription/${action}`), {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) await refreshSubscription();
       }
-    } catch (err) {
-      setMessage({ type: 'error', text: "An error occurred" });
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setActionLoading(null); }
   };
 
   return (
@@ -136,50 +121,73 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
           </button>
         </div>
         
-        <div className="p-6 space-y-8">
-          {/* Change Password */}
-          {user?.hasPassword !== false && (
-            <div>
-              <h4 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-                <Lock size={16} />
-                Change Password
-              </h4>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div>
-                  <input 
-                    type="password"
-                    placeholder="Current Password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <input 
-                    type="password"
-                    placeholder="New Password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
-                  />
-                </div>
-                {message.text && (
-                  <div className={`text-xs ${message.type === 'error' ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {message.text}
-                  </div>
-                )}
-                <button 
-                  type="submit"
-                  disabled={loading || !currentPassword || !newPassword}
-                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {loading ? <Loader2 size={16} className="animate-spin" /> : "Update Password"}
-                </button>
-              </form>
-            </div>
-          )}
+        <div className="p-6 space-y-6">
+          {/* Subscription Management */}
+          <div>
+            <h4 className="text-sm font-bold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+              <CreditCard size={16} className="text-cyan-500" />
+              Subscription
+            </h4>
 
-          <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+            {isPremium ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
+                  <div>
+                    <div className="text-sm font-bold text-zinc-900 dark:text-white capitalize flex items-center gap-2">
+                      {subscription?.plan} Plan
+                      <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-500 rounded-full">Active</span>
+                    </div>
+                    {subscription?.currentPeriodEnd && (
+                      <div className="text-xs text-zinc-500 mt-0.5">
+                        {subscription.cancelAtPeriodEnd ? 'Expires' : 'Renews'}: {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                  <Sparkles size={18} className="text-cyan-500" />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleAction('portal')}
+                    disabled={actionLoading === 'portal'}
+                    className="flex-1 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {actionLoading === 'portal' ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+                    Manage Billing
+                  </button>
+                  {subscription?.cancelAtPeriodEnd ? (
+                    <button
+                      onClick={() => handleAction('resume')}
+                      disabled={actionLoading === 'resume'}
+                      className="flex-1 py-2.5 rounded-xl bg-cyan-500 text-white font-bold text-xs hover:bg-cyan-400 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {actionLoading === 'resume' ? <Loader2 size={12} className="animate-spin" /> : 'Resume Plan'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAction('cancel')}
+                      disabled={actionLoading === 'cancel'}
+                      className="flex-1 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 font-bold text-xs hover:bg-red-500/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {actionLoading === 'cancel' ? <Loader2 size={12} className="animate-spin" /> : 'Cancel Plan'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/pricing"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-xl text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-cyan-500/20"
+                onClick={onClose}
+              >
+                <Sparkles size={14} />
+                Upgrade to Pro
+              </Link>
+            )}
+          </div>
+
+          {/* Logout */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
              <button 
                 onClick={onLogout}
                 className="w-full py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold text-sm hover:bg-red-500/20 transition-colors cursor-pointer"

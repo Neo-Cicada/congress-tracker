@@ -4,16 +4,22 @@ import React from "react";
 import { TrendingUp, TrendingDown, Users } from "lucide-react";
 import { fetchWithCache } from "../lib/apiCache";
 import { getApiUrl } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 // --- PARTY PERFORMANCE CHART ---
 export const PartyPerformanceChart = () => {
   const [data, setData] = React.useState<{ demReturn: number; repReturn: number } | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const { token } = useAuth();
 
   React.useEffect(() => {
+    if (!token) { setLoading(false); return; }
+
     const fetchPartyPerformance = async () => {
       try {
-        const result = await fetchWithCache(getApiUrl("leaderboard/party-performance"));
+        const result = await fetchWithCache(getApiUrl("leaderboard/party-performance"), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setData(result);
       } catch (error) {
         console.error(error);
@@ -23,7 +29,7 @@ export const PartyPerformanceChart = () => {
     };
 
     fetchPartyPerformance();
-  }, []);
+  }, [token]);
 
   if (loading || !data) {
       return (

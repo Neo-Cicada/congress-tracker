@@ -97,6 +97,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(storedToken);
       setSubscription(parsedUser.subscription || DEFAULT_SUBSCRIPTION);
       fetchSavedTrades(storedToken);
+
+      // Auto-refresh subscription from API to catch DB changes
+      fetch(getApiUrl('subscription/status'), {
+        headers: { Authorization: `Bearer ${storedToken}` }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.subscription) {
+            setSubscription(data.subscription);
+            // Update localStorage so next load is also fresh
+            const updated = { ...parsedUser, subscription: data.subscription };
+            localStorage.setItem("user", JSON.stringify(updated));
+          }
+        })
+        .catch(() => {}); // Silently fail if API is unreachable
     }
     setLoading(false);
   }, []);
