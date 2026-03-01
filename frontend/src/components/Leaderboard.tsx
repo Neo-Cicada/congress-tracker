@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Crown, TrendingUp, User, ChevronRight } from "lucide-react";
 import { fetchWithCache } from "../lib/apiCache";
 import { getApiUrl } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 interface LeaderboardEntry {
   rank: number;
@@ -71,31 +72,40 @@ const LEADERS: LeaderboardEntry[] = [
 const Leaderboard = () => {
   const [leaders, setLeaders] = React.useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { token, isPremium } = useAuth();
 
   React.useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const data = await fetchWithCache(getApiUrl("leaderboard"));
-        
-        const mapped: LeaderboardEntry[] = data.map((p: any, index: number) => ({
-          rank: index + 1,
-          name: p.name,
-          party: p.party || "I",
-          returns: p.stats?.ytdReturn || 0,
-          topHolding: p.stats?.topHolding || "N/A",
-          id: p._id // Verify if we need ID for linking
-        }));
-        setLeaders(mapped);
+        if (isPremium && token) {
+          const data = await fetchWithCache(getApiUrl("leaderboard"), {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          const mapped: LeaderboardEntry[] = data.map((p: any, index: number) => ({
+            rank: index + 1,
+            name: p.name,
+            party: p.party || "I",
+            returns: p.stats?.ytdReturn || 0,
+            topHolding: p.stats?.topHolding || "N/A",
+            id: p._id
+          }));
+          setLeaders(mapped);
+        } else {
+          // Free users: show static preview data
+          setLeaders(LEADERS);
+        }
       } catch (error) {
         console.error(error);
-        // Fallback or empty state could be handled here
+        // Fallback to static data on any error
+        setLeaders(LEADERS);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [isPremium, token]);
 
   if (loading) {
      return (

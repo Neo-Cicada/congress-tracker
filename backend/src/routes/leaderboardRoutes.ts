@@ -1,10 +1,12 @@
 import express from 'express';
 import { Politician } from '../models/Politician';
+import { protect } from '../middleware/authMiddleware';
+import { requireSubscription } from '../middleware/subscriptionMiddleware';
 
 const router = express.Router();
 
 // GET /api/leaderboard/party-performance - Get average YTD return by party
-router.get('/party-performance', async (req, res) => {
+router.get('/party-performance', protect, requireSubscription, async (req, res) => {
     try {
         const perf = await Politician.aggregate([
             { $match: { 'stats.ytdReturn': { $exists: true, $ne: null } } },
@@ -36,7 +38,7 @@ router.get('/party-performance', async (req, res) => {
 });
 
 // GET /api/leaderboard - Get top politicians by YTD return
-router.get('/', async (req, res) => {
+router.get('/', protect, requireSubscription, async (req, res) => {
     try {
         const { sort } = req.query;
         const sortOrder = sort === 'asc' ? 1 : -1;

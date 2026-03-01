@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useAuth } from "../context/AuthContext";
 import {
   Activity,
   ShieldCheck,
@@ -11,21 +12,21 @@ import {
   Sun,
   Moon,
   User,
+  Sparkles,
 } from "lucide-react";
 
 export const MobileNavbar = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
+  const { isPremium } = useAuth();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Helper to check if a link is active
   const isActive = (path: string) => pathname === path;
 
-  // Toggle theme handler
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
@@ -47,21 +48,44 @@ export const MobileNavbar = () => {
         />
       </Link>
       
-      {/* Theme Toggle in center for easy access */}
-      <button
-        onClick={toggleTheme}
-        className="relative -top-4 w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 border-4 border-white dark:border-[#050505]"
-      >
-        {mounted ? (
-           resolvedTheme === "dark" ? (
-            <Sun size={24} className="text-white" />
+      {/* Center button */}
+      {isPremium ? (
+        /* Pro users: Theme toggle */
+        <button
+          onClick={toggleTheme}
+          className="relative -top-4 w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 border-4 border-white dark:border-[#050505]"
+        >
+          {mounted ? (
+            resolvedTheme === "dark" ? (
+              <Sun size={24} className="text-white" />
+            ) : (
+              <Moon size={24} className="text-white" />
+            )
           ) : (
-            <Moon size={24} className="text-white" />
-          )
-        ) : (
-           <div className="w-6 h-6" /> // Placeholder
-        )}
-      </button>
+            <div className="w-6 h-6" />
+          )}
+        </button>
+      ) : (
+        /* Free users: Upgrade button + small theme toggle */
+        <div className="relative">
+          <Link href="/pricing">
+            <div className="relative -top-4 w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 border-4 border-white dark:border-[#050505]">
+              <Sparkles size={24} className="text-white" />
+            </div>
+          </Link>
+          {/* Small theme toggle on the side */}
+          <button
+            onClick={toggleTheme}
+            className="absolute -top-6 -right-5 w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 shadow-sm"
+          >
+            {mounted ? (
+              resolvedTheme === "dark" ? <Sun size={12} /> : <Moon size={12} />
+            ) : (
+              <div className="w-3 h-3" />
+            )}
+          </button>
+        </div>
+      )}
 
       <Link href="/leaderboard">
         <MobileNavIcon
@@ -77,7 +101,6 @@ export const MobileNavbar = () => {
           active={isActive("/profile")}
         />
       </Link>
-
     </nav>
   );
 };
@@ -107,3 +130,4 @@ const MobileNavIcon = ({
     </span>
   </div>
 );
+

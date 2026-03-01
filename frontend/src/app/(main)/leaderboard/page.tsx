@@ -7,6 +7,8 @@ import { TradeCard } from "../../../components/TradeCard";
 import Link from "next/link";
 import { fetchWithCache } from "../../../lib/apiCache";
 import { getApiUrl } from "../../../lib/api";
+import { useAuth } from "../../../context/AuthContext";
+import UpgradeGate from "../../../components/UpgradeGate";
 
 interface LeaderboardItem {
     rank: number;
@@ -22,15 +24,25 @@ export default function LeaderboardPage() {
     const [gainers, setGainers] = useState<LeaderboardItem[]>([]);
     const [losers, setLosers] = useState<LeaderboardItem[]>([]);
     const [suspiciousTrades, setSuspiciousTrades] = useState<any[]>([]);
+    const { isPremium, token } = useAuth();
 
     useEffect(() => {
         setMounted(true);
+
+        // Don't fetch premium data for free users
+        if (!isPremium || !token) {
+            setLoading(false);
+            return;
+        }
+
+        const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+
         const fetchLeaderboards = async () => {
             try {
                 const [gainersData, losersData, ethicsData] = await Promise.all([
-                    fetchWithCache(getApiUrl('leaderboard?sort=desc')),
-                    fetchWithCache(getApiUrl('leaderboard?sort=asc')),
-                    fetchWithCache(getApiUrl('ethics/summary'))
+                    fetchWithCache(getApiUrl('leaderboard?sort=desc'), authHeaders),
+                    fetchWithCache(getApiUrl('leaderboard?sort=asc'), authHeaders),
+                    fetchWithCache(getApiUrl('ethics/summary'), authHeaders)
                 ]);
                 
                 if (ethicsData && ethicsData.suspiciousTrades) {
@@ -58,7 +70,7 @@ export default function LeaderboardPage() {
             }
         };
         fetchLeaderboards();
-    }, []);
+    }, [isPremium, token]);
 
     if (!mounted) return null;
 
@@ -78,6 +90,7 @@ export default function LeaderboardPage() {
                 </p>
             </header>
 
+            <UpgradeGate featureName="Alpha Leaderboard">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
                 {loading ? (
                     <>
@@ -255,6 +268,7 @@ export default function LeaderboardPage() {
                     </>
                 )}
             </div>
+            </UpgradeGate>
         </div>
     );
 }

@@ -200,7 +200,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></div> Real-time alerts</li>
                 <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></div> Basic analytics</li>
               </ul>
-              <Link href="/signup?plan=weekly" className="w-full py-3 px-6 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors mt-auto">
+              <Link href="/pricing" className="w-full py-3 px-6 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors mt-auto">
                 Select Weekly
               </Link>
             </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-cyan-400 dark:bg-cyan-500 shrink-0"></div> Suspicious timing flags</li>
                 <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-cyan-400 dark:bg-cyan-500 shrink-0"></div> Priority support</li>
               </ul>
-              <Link href="/signup?plan=monthly" className="w-full py-4 px-6 rounded-xl bg-cyan-500 text-white font-bold text-center hover:bg-cyan-400 transition-all hover:scale-105 mt-auto text-lg shadow-lg shadow-cyan-500/25">
+              <Link href="/pricing" className="w-full py-4 px-6 rounded-xl bg-cyan-500 text-white font-bold text-center hover:bg-cyan-400 transition-all hover:scale-105 mt-auto text-lg shadow-lg shadow-cyan-500/25">
                 Start Pro Monthly
               </Link>
             </div>
@@ -237,7 +237,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></div> API Access (Beta)</li>
                 <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></div> Exclusive Alpha Reports</li>
               </ul>
-              <Link href="/signup?plan=yearly" className="w-full py-3 px-6 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors mt-auto">
+              <Link href="/pricing" className="w-full py-3 px-6 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors mt-auto">
                 Select Yearly
               </Link>
             </div>

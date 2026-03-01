@@ -3,6 +3,8 @@ import { Trade, ITrade } from '../models/Trade';
 import { Politician } from '../models/Politician';
 import { getConflictingSectors } from '../utils/committeeSectors';
 import { checkSuspiciousTiming } from '../utils/marketEvents';
+import { protect } from '../middleware/authMiddleware';
+import { requireSubscription } from '../middleware/subscriptionMiddleware';
 
 import YahooFinance from 'yahoo-finance2';
 
@@ -82,7 +84,7 @@ export interface EthicsConflict {
  * GET /api/ethics/summary
  * Returns ethics score, risk level, and compliance records.
  */
-router.get('/summary', async (req: Request, res: Response) => {
+router.get('/summary', protect, requireSubscription, async (req: Request, res: Response) => {
     try {
         const trades = await Trade.find({
             transactionDate: { $exists: true },

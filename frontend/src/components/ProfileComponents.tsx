@@ -9,14 +9,17 @@ import {
     Lock,
     Trash2,
     Plus,
-    Loader2
+    Loader2,
+    Sparkles,
+    CreditCard,
+    ExternalLink,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getApiUrl } from "../lib/api";
 
 // --- 1. USER PROFILE HEADER ---
 export const ProfileHeader = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isPremium, subscription } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
@@ -56,6 +59,11 @@ export const ProfileHeader = () => {
                               <h2 className="text-xl md:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
                                   {user?.firstName || user?.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "Nexus Alpha User"}
                               </h2>
+                              {isPremium && (
+                                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full">
+                                  Pro
+                                </span>
+                              )}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                               <Mail size={14} />
@@ -181,6 +189,145 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+// --- SUBSCRIPTION CARD ---
+export const SubscriptionCard = () => {
+  const { token, subscription, isPremium, refreshSubscription } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleCancel = async () => {
+    if (!confirm('Are you sure you want to cancel? You\'ll retain access until the end of your billing period.')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(getApiUrl('subscription/cancel'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) await refreshSubscription();
+    } catch (err) {
+      console.error('Cancel error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResume = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(getApiUrl('subscription/resume'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) await refreshSubscription();
+    } catch (err) {
+      console.error('Resume error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await fetch(getApiUrl('subscription/portal'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.portalUrl) {
+        window.open(data.portalUrl, '_blank');
+      }
+    } catch (err) {
+      console.error('Portal error:', err);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const statusColors: Record<string, string> = {
+    active: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+    past_due: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+    cancelled: 'bg-red-500/10 text-red-500 border-red-500/20',
+    expired: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20',
+    free: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20',
+  };
+
+  const status = subscription?.status || 'free';
+
+  return (
+    <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 relative transition-colors backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-mono font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+          <CreditCard size={18} className="text-cyan-500" />
+          Subscription
+        </h3>
+        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-1 rounded-full border ${statusColors[status]}`}>
+          {status === 'active' && subscription?.cancelAtPeriodEnd ? 'Cancelling' : status}
+        </span>
+      </div>
+
+      {isPremium ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
+            <div>
+              <div className="text-sm font-bold text-zinc-900 dark:text-white capitalize">
+                {subscription?.plan} Plan
+              </div>
+              {subscription?.currentPeriodEnd && (
+                <div className="text-xs text-zinc-500 mt-1">
+                  {subscription.cancelAtPeriodEnd ? 'Access until' : 'Renews'}: {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                </div>
+              )}
+            </div>
+            <Sparkles size={20} className="text-cyan-500" />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handlePortal}
+              disabled={portalLoading}
+              className="flex-1 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {portalLoading ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+              Manage
+            </button>
+            {subscription?.cancelAtPeriodEnd ? (
+              <button
+                onClick={handleResume}
+                disabled={loading}
+                className="flex-1 py-2.5 rounded-xl bg-cyan-500 text-white font-bold text-sm hover:bg-cyan-400 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {loading ? <Loader2 size={14} className="animate-spin" /> : 'Resume'}
+              </button>
+            ) : (
+              <button
+                onClick={handleCancel}
+                disabled={loading}
+                className="flex-1 py-2.5 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold text-sm hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {loading ? <Loader2 size={14} className="animate-spin" /> : 'Cancel'}
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-4">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            Unlock premium features with a Pro subscription.
+          </p>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-cyan-500/25"
+          >
+            <Sparkles size={16} />
+            View Plans
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

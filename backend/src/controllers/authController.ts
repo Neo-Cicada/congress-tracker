@@ -51,6 +51,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
                 lastName: user.lastName,
                 token: generateToken(user.id),
                 hasPassword: true,
+                subscription: user.subscription,
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -76,6 +77,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
                 lastName: user.lastName,
                 token: generateToken(user.id),
                 hasPassword: true,
+                subscription: user.subscription,
             });
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
@@ -98,13 +100,13 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        // Only return whitelisted fields — never spread the full Mongoose document
         res.json({
             _id: user._id,
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
             hasPassword: !!user.passwordHash,
+            subscription: user.subscription,
         });
     } catch (error) {
         console.error('Error fetching user:', error);
@@ -166,6 +168,7 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
             lastName: user.lastName,
             token: generateToken(user.id),
             hasPassword: !!user.passwordHash,
+            subscription: user.subscription,
         });
 
     } catch (error) {

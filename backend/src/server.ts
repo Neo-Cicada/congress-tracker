@@ -12,6 +12,7 @@ import leaderboardRoutes from './routes/leaderboardRoutes';
 import politicianRoutes from './routes/politicianRoutes';
 import ethicsRoutes from './routes/ethicsRoutes';
 import authRoutes from './routes/authRoutes';
+import subscriptionRoutes from './routes/subscriptionRoutes';
 import userRoutes from './routes/userRoutes';
 import { validateEnv } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
@@ -36,6 +37,16 @@ app.use(cors({
   },
   credentials: true,
 }));
+// Capture raw body for webhook signature verification
+app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }), (req: any, _res, next) => {
+  req.rawBody = req.body;
+  // Parse the raw body into JSON for the controller
+  if (Buffer.isBuffer(req.body)) {
+    req.body = JSON.parse(req.body.toString());
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -61,6 +72,7 @@ app.use('/api/politician', politicianRoutes);
 app.use('/api/ethics', ethicsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 // dev routes (optional: only enable in non-prod)
 if (process.env.NODE_ENV !== 'production') {

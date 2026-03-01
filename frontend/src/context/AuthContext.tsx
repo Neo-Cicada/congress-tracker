@@ -1,8 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getApiUrl } from "../lib/api";
+
+interface Subscription {
+  status: 'free' | 'active' | 'past_due' | 'cancelled' | 'expired';
+  plan: 'weekly' | 'monthly' | 'yearly' | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
 
 interface User {
   _id: string;
@@ -10,26 +17,40 @@ interface User {
   firstName?: string;
   lastName?: string;
   hasPassword?: boolean;
+  subscription?: Subscription;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   savedTrades: string[];
+  subscription: Subscription | null;
+  isPremium: boolean;
   login: (userData: User, token: string) => void;
   logout: () => void;
   toggleSavedTrade: (tradeId: string) => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const DEFAULT_SUBSCRIPTION: Subscription = {
+  status: 'free',
+  plan: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [savedTrades, setSavedTrades] = useState<string[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const isPremium = subscription?.status === 'active';
 
   const fetchSavedTrades = async (currentToken: string) => {
     try {
@@ -46,13 +67,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshSubscription = useCallback(async () => {
+    const currentToken = token || localStorage.getItem("token");
+    if (!currentToken) return;
+
+    try {
+      const res = await fetch(getApiUrl('subscription/status'), {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription(data.subscription || DEFAULT_SUBSCRIPTION);
+
+        // Also update user object's subscription
+        setUser(prev => prev ? { ...prev, subscription: data.subscription } : prev);
+      }
+    } catch (err) {
+      console.error("Failed to fetch subscription:", err);
+    }
+  }, [token]);
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
 
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
       setToken(storedToken);
+      setSubscription(parsedUser.subscription || DEFAULT_SUBSCRIPTION);
       fetchSavedTrades(storedToken);
     }
     setLoading(false);
@@ -97,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (userData: User, newToken: string) => {
     setUser(userData);
     setToken(newToken);
+    setSubscription(userData.subscription || DEFAULT_SUBSCRIPTION);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", newToken);
     fetchSavedTrades(newToken);
@@ -107,13 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setToken(null);
     setSavedTrades([]);
+    setSubscription(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     router.push("/"); 
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, savedTrades, toggleSavedTrade, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, savedTrades, subscription, isPremium, toggleSavedTrade, login, logout, refreshSubscription, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -126,3 +171,4 @@ export function useAuth() {
   }
   return context;
 }
+

@@ -14,12 +14,13 @@ import {
   Moon,
   User,
   LogOut,
+  Sparkles,
 } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, resolvedTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, isPremium } = useAuth();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -59,12 +60,14 @@ export const Sidebar: React.FC = () => {
           label="Ethics Monitor"
           href="/ethics"
           active={isActive("/ethics")}
+          premium={!isPremium}
         />
         <SidebarIcon
           icon={<LayoutGrid size={22} />}
           label="Leaderboard"
           href="/leaderboard"
-          active={isActive("/leaderboard")} 
+          active={isActive("/leaderboard")}
+          premium={!isPremium}
         />
         <SidebarIcon
           icon={<User size={22} />}
@@ -97,6 +100,16 @@ export const Sidebar: React.FC = () => {
           )}
         </button>
 
+        {!isPremium && (
+          <Link href="/pricing">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 text-cyan-500 hover:from-cyan-500/20 hover:to-purple-500/20 transition-all duration-300 group relative">
+              <Sparkles size={20} />
+              <span className="hidden lg:block absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap uppercase tracking-widest border border-zinc-800 z-50">
+                Upgrade
+              </span>
+            </div>
+          </Link>
+        )}
 
       </div>
     </div>
@@ -118,22 +131,27 @@ const SidebarIcon = ({
   label,
   href,
   active = false,
+  premium = false,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   href?: string;
   active?: boolean;
+  premium?: boolean;
   onClick?: () => void;
 }) => {
   const content = (
     <div className="group relative cursor-pointer flex items-center lg:block">
       <div
-        className={`${
+        className={`relative ${
           active ? "text-cyan-500" : "text-zinc-400 dark:text-zinc-600"
         } group-hover:text-cyan-500 transition-colors mr-4 lg:mr-0`}
       >
         {icon}
+        {premium && (
+          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full ring-2 ring-white dark:ring-zinc-900" />
+        )}
       </div>
 
       {/* Active Indicator (Desktop) */}

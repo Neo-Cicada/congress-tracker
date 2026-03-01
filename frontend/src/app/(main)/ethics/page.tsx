@@ -15,6 +15,8 @@ import {
 } from "../../../components/EthicsComponents";
 import { fetchWithCache } from "../../../lib/apiCache";
 import { getApiUrl } from "../../../lib/api";
+import { useAuth } from "../../../context/AuthContext";
+import UpgradeGate from "../../../components/UpgradeGate";
 
 interface EthicsData {
     score: number;
@@ -33,10 +35,20 @@ export default function EthicsPage() {
   const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<EthicsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isPremium, token } = useAuth();
 
   useEffect(() => {
     setMounted(true);
-    fetchWithCache(getApiUrl('ethics/summary'))
+
+    // Don't fetch premium data for free users
+    if (!isPremium || !token) {
+      setLoading(false);
+      return;
+    }
+
+    fetchWithCache(getApiUrl('ethics/summary'), {
+      headers: { Authorization: `Bearer ${token}` }
+    })
         .then(data => {
             setData(data);
             setLoading(false);
@@ -45,7 +57,7 @@ export default function EthicsPage() {
             console.error('Failed to fetch ethics data:', err);
             setLoading(false);
         });
-  }, []);
+  }, [isPremium, token]);
 
   if (!mounted) return null;
 
@@ -70,6 +82,7 @@ export default function EthicsPage() {
             )}
         </header>
 
+        <UpgradeGate featureName="Ethics Monitor">
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Row 1: Score & Behavior */}
@@ -109,6 +122,7 @@ export default function EthicsPage() {
              )}
           </div>
         </div>
+        </UpgradeGate>
         
         <footer className="mt-20 py-12 border-t border-zinc-200 dark:border-zinc-900 flex flex-col items-center gap-4 text-zinc-500 text-xs tracking-widest uppercase">
           Nexus Protocol © 2026 • Encrypted Data Stream
