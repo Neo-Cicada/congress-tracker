@@ -1,25 +1,57 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import { Politician } from "./src/models/Politician";
-import { Trade } from "./src/models/Trade";
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import YahooFinance from 'yahoo-finance2';
+import { Trade } from './src/models/Trade';
 
 dotenv.config();
 
-async function run() {
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+
+async function main() {
     try {
         await mongoose.connect(process.env.MONGO_URI as string);
-        const pols = await Politician.find({ "committees.0": { $exists: true } }).limit(5).lean();
-        console.log("Politicians with committees count:", pols.length);
-        if (pols.length > 0) {
-            console.log("Example:", pols[0].name, pols[0].committees);
-        } else {
-            const allPols = await Politician.find({}).limit(1).lean();
-            console.log("Total politicians without committees?", allPols[0]);
-        }
-        process.exit(0);
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
+        console.log('DB connected');
+
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        const pipeline = [
+            {
+                $match: {
+                    transactionDate: { $gte: ninetyDaysAgo },
+                    ticker: { $exists: true, $ne: null, $nin: ['', 'N/A'] }
+                }
+            },
+            {
+                $group: {
+                    _id: '$ticker',
+                    name: { $first: '$assetName' }
+                }
+            },
+            { $limit: 10 }
+        ];
+
+        const popularStocks = await Trade.aggregate(pipeline as any[]);
+        console.log('Popular stocks:', popularStocks.map(s => s._id));
+
+        const results = await Promise.all(
+            popularStocks.map(async (stock) => {
+                try {
+                    const quote = await yahooFinance.quote(stock._id) as any;
+                    console.log(`[SUCCESS] ${stock._id}: ${quote?.regularMarketChangePercent}`);
+                    return true;
+                } catch (err: any) {
+                    console.error(`[ERROR] ${stock._id}:`, err.message);
+                    return false;
+                }
+            })
+        );
+
+        mongoose.disconnect();
+    } catch (err) {
+        console.error(err);
+        mongoose.disconnect();
     }
 }
-run();
+
+main();

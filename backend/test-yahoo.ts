@@ -1,11 +1,14 @@
 import YahooFinance from 'yahoo-finance2';
-async function test() {
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+
+async function main() {
   try {
-    const yahooFinance = new (YahooFinance as any)();
-    const q1: any = await yahooFinance.quote('MSFT');
-    console.log(q1.regularMarketChangePercent);
-  } catch (e: any) {
-    console.error("Error:", e.message);
+    const quote = await yahooFinance.quote('MSFT') as any;
+    console.log("quote.regularMarketChangePercent:", quote?.regularMarketChangePercent);
+    console.log(quote);
+  } catch (e) {
+    console.error(e);
   }
 }
-test();
+
+main();

@@ -43,31 +43,30 @@ router.get('/popular', async (req: Request, res: Response): Promise<void> => {
 
     const popularStocks = await Trade.aggregate(pipeline as any[]);
 
-    // Fetch live market changes for these top tickers
-    const enhancedStocks = await Promise.all(
-      popularStocks.map(async (stock) => {
-        let changeStr = '+0%';
-        try {
-          const quote = await yahooFinance.quote(stock.ticker) as any;
-          const changePercent = quote?.regularMarketChangePercent || 0;
-          const sign = changePercent > 0 ? '+' : '';
-          changeStr = `${sign}${changePercent.toFixed(2)}%`;
-        } catch (err: any) {
-          // Fallback if quote fails
-          console.error(`Failed to fetch quote for ${stock.ticker}:`, err.message);
-          // Return N/A if API fails or rate limited
-          changeStr = 'N/A';
-        }
+    // Fetch live market changes for these top tickers sequentially to avoid rate-limiting
+    const enhancedStocks = [];
+    for (const stock of popularStocks) {
+      let changeStr = '+0%';
+      try {
+        const quote = await yahooFinance.quote(stock.ticker) as any;
+        const changePercent = quote?.regularMarketChangePercent || 0;
+        const sign = changePercent > 0 ? '+' : '';
+        changeStr = `${sign}${changePercent.toFixed(2)}%`;
+      } catch (err: any) {
+        // Fallback if quote fails
+        console.error(`Failed to fetch quote for ${stock.ticker}:`, err.message);
+        // Return N/A if API fails or rate limited
+        changeStr = 'N/A';
+      }
 
-        return {
-          ticker: stock.ticker as string,
-          name: stock.name as string,
-          count: Number(stock.count),
-          sentiment: stock.sentiment as string,
-          change: changeStr
-        };
-      })
-    );
+      enhancedStocks.push({
+        ticker: stock.ticker as string,
+        name: stock.name as string,
+        count: Number(stock.count),
+        sentiment: stock.sentiment as string,
+        change: changeStr
+      });
+    }
 
     res.set('Cache-Control', 'public, max-age=3600, s-maxage=3600'); // Cache for 1 hour
     res.json(enhancedStocks);

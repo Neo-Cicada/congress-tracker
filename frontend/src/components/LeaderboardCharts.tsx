@@ -160,8 +160,8 @@ export const PopularStocksList = () => {
                                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{stock.count} Members Trading</div>
                             </div>
                         </div>
-                        <div className={`text-sm font-bold flex items-center gap-1 ${stock.change.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'}`}>
-                            {stock.change.startsWith('-') ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
+                        <div className={`text-sm font-bold flex items-center gap-1 ${stock.change === 'N/A' ? 'text-zinc-400 font-medium dark:text-zinc-500' : stock.change.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'}`}>
+                            {stock.change !== 'N/A' && (stock.change.startsWith('-') ? <TrendingDown size={14} /> : <TrendingUp size={14} />)}
                             {stock.change}
                         </div>
                     </div>
