@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { PartyPerformanceChart, PopularStocksList } from "../../../components/LeaderboardCharts";
-import { User, TrendingUp, TrendingDown, ArrowRight, ShieldAlert } from "lucide-react";
+import { User, TrendingUp, TrendingDown, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
 import { TradeCard } from "../../../components/TradeCard";
 import Link from "next/link";
 import { fetchWithCache } from "../../../lib/apiCache";
@@ -18,6 +18,7 @@ interface LeaderboardItem {
 
 export default function LeaderboardPage() {
     const [mounted, setMounted] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [gainers, setGainers] = useState<LeaderboardItem[]>([]);
     const [losers, setLosers] = useState<LeaderboardItem[]>([]);
     const [suspiciousTrades, setSuspiciousTrades] = useState<any[]>([]);
@@ -52,6 +53,8 @@ export default function LeaderboardPage() {
                 if (Array.isArray(losersData)) setLosers(formatData(losersData).slice(0, 10));
             } catch (error) {
                 console.error('Failed to fetch leaderboard data:', error);
+            } finally {
+                setLoading(false);
             }
         };
         fetchLeaderboards();
@@ -76,6 +79,80 @@ export default function LeaderboardPage() {
             </header>
 
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
+                {loading ? (
+                    <>
+                        {/* Skeleton: Top Gainers */}
+                        <div className="md:col-span-4 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 animate-pulse">
+                            <div className="h-1 w-full bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 rounded absolute top-0 left-0" />
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="h-6 w-32 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                                <div className="h-5 w-10 bg-emerald-500/10 rounded" />
+                            </div>
+                            <div className="space-y-5">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-6 w-6 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                                            <div className="space-y-1.5">
+                                                <div className="h-4 w-28 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                                                <div className="h-2.5 w-16 bg-zinc-100 dark:bg-zinc-800/60 rounded" />
+                                            </div>
+                                        </div>
+                                        <div className="h-4 w-14 bg-emerald-500/10 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Skeleton: Top Losers */}
+                        <div className="md:col-span-4 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 animate-pulse">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="h-6 w-28 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                                <div className="h-5 w-10 bg-rose-500/10 rounded" />
+                            </div>
+                            <div className="space-y-5">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-6 w-6 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                                            <div className="space-y-1.5">
+                                                <div className="h-4 w-28 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                                                <div className="h-2.5 w-16 bg-zinc-100 dark:bg-zinc-800/60 rounded" />
+                                            </div>
+                                        </div>
+                                        <div className="h-4 w-14 bg-rose-500/10 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Skeleton: Party Stats */}
+                        <div className="md:col-span-4 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 animate-pulse">
+                            <div className="h-6 w-40 bg-zinc-200 dark:bg-zinc-800 rounded mb-6" />
+                            <div className="h-48 bg-zinc-100 dark:bg-zinc-800/40 rounded-2xl" />
+                        </div>
+
+                        {/* Skeleton: Popular Stocks */}
+                        <div className="md:col-span-8 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 animate-pulse">
+                            <div className="h-6 w-36 bg-zinc-200 dark:bg-zinc-800 rounded mb-6" />
+                            <div className="space-y-4">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="h-12 bg-zinc-100 dark:bg-zinc-800/40 rounded-xl" />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Skeleton: Suspicious Activity */}
+                        <div className="md:col-span-4 bg-gradient-to-b from-amber-500/5 to-transparent border border-amber-500/10 rounded-3xl p-6 animate-pulse">
+                            <div className="h-6 w-44 bg-zinc-200 dark:bg-zinc-800 rounded mb-6" />
+                            <div className="space-y-4">
+                                <div className="h-24 bg-zinc-100 dark:bg-zinc-800/30 rounded-2xl" />
+                                <div className="h-24 bg-zinc-100 dark:bg-zinc-800/30 rounded-2xl" />
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
                 {/* --- ROW 1: PRIMARY METRICS --- */}
                 
                 {/* Top Gainers - Col 4 */}
@@ -175,6 +252,8 @@ export default function LeaderboardPage() {
                         VIEW ETHICS REPORT &rarr;
                     </Link>
                 </div>
+                    </>
+                )}
             </div>
         </div>
     );
