@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from './providers';
 import { AuthProvider } from "../context/AuthContext";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { Analytics } from "@vercel/analytics/next";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -97,6 +98,7 @@ export default function RootLayout({
             </AuthProvider>
           </GoogleOAuthProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
