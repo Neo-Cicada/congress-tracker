@@ -11,13 +11,13 @@ const router = Router();
  */
 router.get('/popular', async (req: Request, res: Response): Promise<void> => {
   try {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
     const pipeline = [
       {
         $match: {
-          transactionDate: { $gte: thirtyDaysAgo },
+          transactionDate: { $gte: ninetyDaysAgo },
           ticker: { $exists: true, $ne: null, $nin: ['', 'N/A'] }
         }
       },
@@ -36,7 +36,7 @@ router.get('/popular', async (req: Request, res: Response): Promise<void> => {
         }
       },
       { $project: { ticker: '$_id', name: { $ifNull: ['$name', '$_id'] }, count: { $size: '$uniqueMembers' }, sentiment: { $cond: [{ $gte: ['$buyCount', '$sellCount'] }, 'Bullish', 'Bearish'] } } },
-      { $match: { count: { $gt: 1 } } },
+      { $match: { count: { $gte: 1 } } },
       { $sort: { count: -1 as const, ticker: 1 as const } },
       { $limit: 10 }
     ];

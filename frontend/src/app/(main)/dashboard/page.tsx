@@ -105,9 +105,8 @@ export default function NexusDashboard() {
         const seen = new Set<string>();
         
         for (const t of combined) {
-          const sig = `${t.name}|${t.ticker}|${t.type}|${t.date}|${t.amount}`;
-          if (!seen.has(sig)) {
-            seen.add(sig);
+          if (!seen.has(t.id)) {
+            seen.add(t.id);
             uniqueTrades.push(t);
           }
         }

@@ -138,7 +138,7 @@ export const PopularStocksList = () => {
         <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 h-full">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Crowded Trades</h3>
-                <span className="text-xs text-zinc-500">Last 30 Days</span>
+                <span className="text-xs text-zinc-500">Last 90 Days</span>
             </div>
 
             {loading ? (
@@ -146,7 +146,7 @@ export const PopularStocksList = () => {
             ) : error ? (
                 <div className="flex items-center justify-center h-48 text-rose-500 text-sm">{error}</div>
             ) : stocks.length === 0 ? (
-                <div className="flex items-center justify-center h-48 text-zinc-500 text-sm">No crowded trades found in the last 30 days.</div>
+                <div className="flex items-center justify-center h-48 text-zinc-500 text-sm">No crowded trades found in the last 90 days.</div>
             ) : (
                 <div className="space-y-4">
                     {stocks.map((stock) => (

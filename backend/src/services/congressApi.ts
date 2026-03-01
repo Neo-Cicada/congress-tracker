@@ -39,7 +39,8 @@ export const fetchRecentTrades = async (): Promise<NormalizedTrade[]> => {
       if (t.Transaction && t.Transaction.includes('Sale')) type = 'Sell';
 
       return {
-        externalId: `${t.Ticker}-${t.Date}-${t.Representative}-${Math.random().toString(36).substr(2, 9)}`,
+        // Deterministic ID so the same trade fetched twice isn't duplicated in the DB
+        externalId: Buffer.from(`${t.Representative}-${t.Ticker}-${t.TransactionDate}-${type}-${t.Range}`).toString('base64'),
         politicianName: t.Representative || 'Unknown',
         chamber: t.House === 'House' ? 'House' : 'Senate',
         party: t.Party,
