@@ -29,14 +29,14 @@ export default function LandingPage() {
               {
                 "@type": "WebSite",
                 name: "Nexus Alpha",
-                url: process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.io",
+                url: process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.business",
                 description:
                   "Track congressional trading activity and institutional alpha. Monitor real-time financial disclosures from US politicians.",
                 potentialAction: {
                   "@type": "SearchAction",
                   target: {
                     "@type": "EntryPoint",
-                    urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.io"}/dashboard?search={search_term_string}`,
+                    urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.business"}/dashboard?search={search_term_string}`,
                   },
                   "query-input": "required name=search_term_string",
                 },
@@ -77,8 +77,8 @@ export default function LandingPage() {
               {
                 "@type": "Organization",
                 name: "Nexus Alpha",
-                url: process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.io",
-                logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.io"}/logo.png`,
+                url: process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.business",
+                logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.business"}/logo.png`,
               },
             ],
           }),

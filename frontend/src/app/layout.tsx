@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.io"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nexusalpha.business"),
   title: {
     default: "Nexus Alpha — Track Congressional Trading & Institutional Alpha",
     template: "%s | Nexus Alpha",
