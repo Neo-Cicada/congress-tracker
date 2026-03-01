@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from "../lib/api";
 
 interface User {
   _id: string;
@@ -32,9 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchSavedTrades = async (currentToken: string) => {
     try {
-      // Assuming getApiUrl is imported, but to avoid circular dependencies we might just use the raw URL or relative if proxied.
-      // Since getApiUrl is not imported in AuthContext, we'll import it at the top or use dynamic url
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/users/saved-trades`, {
+      const res = await fetch(getApiUrl('users/saved-trades'), {
         headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (res.ok) {
@@ -72,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/users/saved-trades${isSaved ? `/${tradeId}` : ''}`;
+      const url = isSaved ? getApiUrl(`users/saved-trades/${tradeId}`) : getApiUrl('users/saved-trades');
       const method = isSaved ? 'DELETE' : 'POST';
       const body = isSaved ? undefined : JSON.stringify({ tradeId });
       
