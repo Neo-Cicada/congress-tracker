@@ -20,6 +20,7 @@ export interface Conflict {
   committee: string;
   ticker: string;
   sector: string;
+  type: "Buy" | "Sell";
   date: string;
   severity: "high" | "medium" | "low";
 }
@@ -123,13 +124,16 @@ export const ConflictScanner = ({ conflicts }: { conflicts: Conflict[] }) => {
         {conflicts.map((conflict) => (
           <div
             key={conflict.id}
-            className="group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100 dark:border-zinc-800 hover:border-rose-500/30 transition-all"
+            className={`group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl transition-all ${conflict.type === 'Buy' ? 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/40 hover:border-emerald-500/50' : 'bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/40 hover:border-rose-500/50'}`}
           >
             <div className="flex flex-col gap-1">
               <span className="font-bold text-zinc-800 dark:text-zinc-200">
                 {conflict.politicianName}
               </span>
               <div className="flex items-center gap-2 text-xs text-zinc-500">
+                <span className={`px-1.5 py-0.5 rounded font-bold ${conflict.type === 'Buy' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400'}`}>
+                  {conflict.type}
+                </span>
                 <span className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
                   {conflict.ticker}
                 </span>
@@ -200,7 +204,7 @@ export const TimingDetector = ({ trades = [] }: { trades?: SuspiciousTrade[] }) 
                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100 dark:border-zinc-800 hover:border-amber-500/30 transition-all">
+            <div className={`flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-4 rounded-2xl transition-all ${trade.type === 'Buy' ? 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/40 hover:border-emerald-500/50' : 'bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/40 hover:border-rose-500/50'}`}>
                 <div>
                      <div className="flex items-center gap-2 mb-2">
                         <span className="font-bold text-zinc-900 dark:text-white">{trade.politicianName}</span>

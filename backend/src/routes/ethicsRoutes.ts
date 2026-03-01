@@ -76,6 +76,7 @@ export interface EthicsConflict {
     committee: string;
     ticker: string;
     sector: string;
+    type: "Buy" | "Sell";
     date: string;
     severity: "high" | "medium" | "low";
 }
@@ -102,6 +103,11 @@ router.get('/summary', protect, requireSubscription, async (req: Request, res: R
         const suspiciousTrades: SuspiciousTrade[] = [];
         let violationCount = 0;
         let lateCount = 0;
+
+        // Deduplication sets
+        const seenCompliance = new Set<string>();
+        const seenConflicts = new Set<string>();
+        const seenSuspicious = new Set<string>();
 
         // For Sector Focus
         const sectorCounts: Record<string, number> = {};
@@ -147,15 +153,20 @@ router.get('/summary', protect, requireSubscription, async (req: Request, res: R
                                 else dateStr = `${Math.floor(daysAgo / 30)} mos ago`;
                             }
 
-                            conflicts.push({
-                                id: trade._id ? trade._id.toString() : Math.random().toString(),
-                                politicianName: trade.politicianName,
-                                committee: committee,
-                                ticker: trade.ticker,
-                                sector: trade.sector,
-                                date: dateStr,
-                                severity: trade.transactionType === "Buy" ? "high" : "medium"
-                            });
+                            const conflictKey = `${trade.politicianName}|${trade.ticker}|${tDate.toISOString().split('T')[0]}`;
+                            if (!seenConflicts.has(conflictKey)) {
+                                seenConflicts.add(conflictKey);
+                                conflicts.push({
+                                    id: trade._id ? trade._id.toString() : Math.random().toString(),
+                                    politicianName: trade.politicianName,
+                                    committee: committee,
+                                    ticker: trade.ticker,
+                                    sector: trade.sector,
+                                    type: trade.transactionType as "Buy" | "Sell",
+                                    date: dateStr,
+                                    severity: trade.transactionType === "Buy" ? "high" : "medium"
+                                });
+                            }
                             break;
                         }
                     }
@@ -165,28 +176,36 @@ router.get('/summary', protect, requireSubscription, async (req: Request, res: R
             // --- 2. Suspicious Timing Check ---
             const timingCheck = checkSuspiciousTiming(tDate, trade.ticker, trade.sector, 14); // 14 day window
             if (timingCheck) {
-                suspiciousTrades.push({
-                    id: trade._id ? trade._id.toString() : Math.random().toString(),
-                    politicianName: trade.politicianName,
-                    ticker: trade.ticker,
-                    type: trade.transactionType as "Buy" | "Sell",
-                    date: tDate.toISOString().split('T')[0],
-                    event: timingCheck.event.name,
-                    daysDiff: timingCheck.daysDiff
-                });
+                const suspKey = `${trade.politicianName}|${trade.ticker}|${tDate.toISOString().split('T')[0]}`;
+                if (!seenSuspicious.has(suspKey)) {
+                    seenSuspicious.add(suspKey);
+                    suspiciousTrades.push({
+                        id: trade._id ? trade._id.toString() : Math.random().toString(),
+                        politicianName: trade.politicianName,
+                        ticker: trade.ticker,
+                        type: trade.transactionType as "Buy" | "Sell",
+                        date: tDate.toISOString().split('T')[0],
+                        event: timingCheck.event.name,
+                        daysDiff: timingCheck.daysDiff
+                    });
+                }
             }
 
             // --- 3. Delay Violation Records ---
             if (status !== 'on-time') {
-                complianceRecords.push({
-                    id: trade._id ? trade._id.toString() : Math.random().toString(),
-                    politicianName: trade.politicianName,
-                    ticker: trade.ticker,
-                    tradeDate: tDate.toISOString().split('T')[0],
-                    reportDate: fDate.toISOString().split('T')[0],
-                    daysLate: daysDiff,
-                    status
-                });
+                const compKey = `${trade.politicianName}|${trade.ticker}|${tDate.toISOString().split('T')[0]}`;
+                if (!seenCompliance.has(compKey)) {
+                    seenCompliance.add(compKey);
+                    complianceRecords.push({
+                        id: trade._id ? trade._id.toString() : Math.random().toString(),
+                        politicianName: trade.politicianName,
+                        ticker: trade.ticker,
+                        tradeDate: tDate.toISOString().split('T')[0],
+                        reportDate: fDate.toISOString().split('T')[0],
+                        daysLate: daysDiff,
+                        status
+                    });
+                }
             }
         }
 
