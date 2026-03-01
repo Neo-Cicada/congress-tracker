@@ -11,6 +11,7 @@ export interface Trade {
   type: string;
   amount: string;
   date: string;
+  rawDate?: string;
   reliability: number;
   filingDelay?: number; // Days between trade and report
   disableLink?: boolean;
