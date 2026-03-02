@@ -106,21 +106,18 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Generic Search Logic
     if (search && typeof search === 'string') {
-      const searchRegex = new RegExp(search, 'i');
-      const orConditions: any[] = [
-        { politicianName: { $regex: searchRegex } },
-        { ticker: { $regex: searchRegex } }
-      ];
-
-      // Handle full party names in search
+      const orConditions: any[] = [];
       const lowerSearch = search.toLowerCase();
-      if ('democrat'.includes(lowerSearch)) orConditions.push({ party: 'D' });
-      if ('republican'.includes(lowerSearch)) orConditions.push({ party: 'R' });
 
-      // Also allow direct party match if shorter (e.g. search "D")
-      if (['d', 'r'].includes(lowerSearch)) {
-        orConditions.push({ party: search.toUpperCase() });
+      // If it looks like a party search, handle it specifically
+      if ('democrat'.includes(lowerSearch) || lowerSearch === 'd') {
+        orConditions.push({ party: 'D' });
+      } else if ('republican'.includes(lowerSearch) || lowerSearch === 'r') {
+        orConditions.push({ party: 'R' });
       }
+
+      // Add the text search
+      orConditions.push({ $text: { $search: search } });
 
       query.$or = orConditions;
     }
@@ -150,15 +147,12 @@ router.get('/', async (req: Request, res: Response) => {
     const parsedLimit = Math.min(parseInt(limit as string, 10) || 50, 200);
     const parsedSkip = parseInt(skip as string, 10) || 0;
 
-    const [items, total] = await Promise.all([
-      Trade.find(query)
-        .sort({ filedDate: -1, transactionDate: -1 })
-        .skip(parsedSkip)
-        .limit(parsedLimit)
-        .lean()
-        .exec(),
-      Trade.countDocuments(query)
-    ]);
+    const items = await Trade.find(query)
+      .sort({ filedDate: -1, transactionDate: -1 })
+      .skip(parsedSkip)
+      .limit(parsedLimit)
+      .lean()
+      .exec();
 
     res.set('Cache-Control', 'public, max-age=300, s-maxage=300'); // Cache for 5 minutes
     res.json({
@@ -166,7 +160,7 @@ router.get('/', async (req: Request, res: Response) => {
       page: {
         limit: parsedLimit,
         skip: parsedSkip,
-        total
+        total: -1 // Returning -1 as total since countDocuments is removed for performance
       }
     });
   } catch (err: any) {

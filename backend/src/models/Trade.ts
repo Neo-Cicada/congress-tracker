@@ -43,5 +43,6 @@ const TradeSchema = new Schema<ITrade>(
 TradeSchema.index({ ticker: 1, transactionDate: -1 });
 TradeSchema.index({ politicianName: 1, transactionDate: -1 });
 TradeSchema.index({ filedDate: -1, transactionDate: -1 });
+TradeSchema.index({ politicianName: 'text', ticker: 'text' }, { weights: { politicianName: 10, ticker: 5 }, name: "TextSearchIndex" });
 
 export const Trade = mongoose.model<ITrade>('Trade', TradeSchema);
