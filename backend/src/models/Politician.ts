@@ -33,4 +33,6 @@ const PoliticianSchema = new Schema<IPolitician>(
   { timestamps: true }
 );
 
+PoliticianSchema.index({ name: 'text' }, { weights: { name: 10 }, name: "PoliticianTextSearchIndex" });
+
 export const Politician = mongoose.model<IPolitician>('Politician', PoliticianSchema);

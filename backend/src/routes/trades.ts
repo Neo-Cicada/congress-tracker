@@ -128,7 +128,8 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     if (politician && typeof politician === 'string') {
-      query.politicianName = { $regex: new RegExp(politician, 'i') };
+      // Use exact match instead of regex for the specific politician filter to utilize the politicianName index instantly
+      query.politicianName = politician;
     }
 
     if (type && typeof type === 'string') {
