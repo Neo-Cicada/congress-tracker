@@ -38,6 +38,7 @@ export default function NexusDashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [totalTrades, setTotalTrades] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -125,6 +126,10 @@ export default function NexusDashboard() {
         setHasMore(false);
       } else {
         setHasMore(true);
+      }
+
+      if (data.page && data.page.total !== undefined && data.page.total !== -1) {
+        setTotalTrades(data.page.total);
       }
 
       setTrades(prev => {
@@ -359,7 +364,7 @@ export default function NexusDashboard() {
                     {loadingMore ? (
                       <><Loader2 size={14} className="animate-spin" /> Loading...</>
                     ) : (
-                      "Load More Data"
+                      totalTrades !== null ? `Showing ${trades.length} of ${totalTrades} trades. Load More` : "Load More Data"
                     )}
                     <div className="absolute inset-0 rounded-xl ring-2 ring-white/20 dark:ring-black/10 group-hover:ring-cyan-500/50 transition-all pointer-events-none" />
                   </button>

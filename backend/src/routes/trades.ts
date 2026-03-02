@@ -1,15 +1,24 @@
 import { Router, Request, Response } from 'express';
 import YahooFinance from 'yahoo-finance2';
+import rateLimit from 'express-rate-limit';
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 import { Trade } from '../models/Trade';
 
 const router = Router();
 
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 30, // 30 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' }
+});
+
 /**
  * GET /api/trades/popular
  * Returns the most popular stocks traded by members of Congress in the last 30 days.
  */
-router.get('/popular', async (req: Request, res: Response): Promise<void> => {
+router.get('/popular', searchLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -89,7 +98,7 @@ router.get('/popular', async (req: Request, res: Response): Promise<void> => {
  *  - limit=50 (max 200)
  *  - skip=0
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', searchLimiter, async (req: Request, res: Response) => {
   try {
     const {
       ticker,
@@ -148,13 +157,20 @@ router.get('/', async (req: Request, res: Response) => {
       .lean()
       .exec();
 
+    let totalCount = -1;
+    if (Object.keys(query).length === 0) {
+      totalCount = await Trade.estimatedDocumentCount();
+    } else {
+      totalCount = await Trade.countDocuments(query);
+    }
+
     res.set('Cache-Control', 'public, max-age=300, s-maxage=300'); // Cache for 5 minutes
     res.json({
       trades: items,
       page: {
         limit: parsedLimit,
         skip: parsedSkip,
-        total: -1 // Returning -1 as total since countDocuments is removed for performance
+        total: totalCount
       }
     });
   } catch (err: any) {
