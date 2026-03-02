@@ -57,7 +57,8 @@ router.get('/', async (req, res) => {
         const { search } = req.query;
         let query = {};
         if (search) {
-            query = { $text: { $search: String(search) } };
+            const escapedSearch = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            query = { name: { $regex: new RegExp('\\b' + escapedSearch, 'i') } };
         }
         const politicians = await Politician.find(query).limit(20);
         res.json(politicians);

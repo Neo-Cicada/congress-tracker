@@ -63,9 +63,15 @@ export default function NexusDashboard() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
+  const fetchIdRef = useRef(0);
+
   const fetchTrades = async (currentOffset = 0, isInitial = false) => {
+    // Increment the global fetch sequence
+    const currentFetchId = ++fetchIdRef.current;
+    
     try {
       if (currentOffset === 0) setLoading(true);
+      setError(null);
       
       const queryParams = new URLSearchParams({
         limit: LIMIT.toString(),
@@ -74,10 +80,32 @@ export default function NexusDashboard() {
       });
 
       const url = getApiUrl(`trades?${queryParams}`);
+      let data = null;
+      let retries = 0;
+      const MAX_RETRIES = 3;
+
+      // Retry mechanism for cold starts
+      while (retries < MAX_RETRIES) {
+        try {
+          data = await (currentOffset === 0 
+            ? fetchWithCache(url) 
+            : fetch(url).then(res => {
+                if (!res.ok) throw new Error("Fetch failed");
+                return res.json();
+              }));
+          break; // Success, break out of retry loop
+        } catch (fetchErr) {
+          retries++;
+          if (retries >= MAX_RETRIES) throw fetchErr;
+          console.warn(`Fetch failed, retrying in 3 seconds... (Attempt ${retries}/${MAX_RETRIES})`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          // If the sequence changed while we were sleeping, abort this payload
+          if (currentFetchId !== fetchIdRef.current) return;
+        }
+      }
       
-      const data = await (currentOffset === 0 
-        ? fetchWithCache(url) 
-        : fetch(url).then(res => res.json()));
+      // Prevent stale out-of-order race conditions
+      if (currentFetchId !== fetchIdRef.current) return;
       
       const formattedTrades = data.trades.map((trade: any) => ({
         id: trade._id,
@@ -197,7 +225,7 @@ export default function NexusDashboard() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search politicians, tickers, or parties..."
+            placeholder="Search politicians or tickers..."
             className="w-full bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/50 py-4 pl-14 pr-6 rounded-2xl outline-none focus:border-cyan-500/50 focus:ring-4 ring-cyan-500/5 transition-all text-lg placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm dark:shadow-none"
           />
         </div>

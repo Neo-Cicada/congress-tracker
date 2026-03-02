@@ -107,20 +107,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Generic Search Logic
     if (search && typeof search === 'string') {
-      const orConditions: any[] = [];
-      const lowerSearch = search.toLowerCase();
-
-      // If it looks like a party search, handle it specifically
-      if ('democrat'.includes(lowerSearch) || lowerSearch === 'd') {
-        orConditions.push({ party: 'D' });
-      } else if ('republican'.includes(lowerSearch) || lowerSearch === 'r') {
-        orConditions.push({ party: 'R' });
-      }
-
-      // Add the text search
-      orConditions.push({ $text: { $search: search } });
-
-      query.$or = orConditions;
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp('\\b' + escapedSearch, 'i');
+      query.$or = [
+        { politicianName: { $regex: searchRegex } },
+        { ticker: { $regex: searchRegex } }
+      ];
     }
 
     if (ticker && typeof ticker === 'string') {
