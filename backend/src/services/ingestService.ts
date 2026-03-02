@@ -44,7 +44,18 @@ export const ingestTrades = async (
   for (const t of normalizedTrades) {
     const politician = await upsertPolitician(t);
 
-    const existing = await Trade.findOne({ externalId: t.externalId });
+    const existing = await Trade.findOne({
+      $or: [
+        { externalId: t.externalId },
+        {
+          politicianName: t.politicianName,
+          ticker: t.ticker.toUpperCase(),
+          transactionDate: t.transactionDate ? new Date(t.transactionDate) : undefined,
+          transactionType: t.transactionType || 'Unknown',
+          amountRange: t.amountRange || undefined
+        }
+      ]
+    });
 
     if (!existing) {
       let sector: string = '';

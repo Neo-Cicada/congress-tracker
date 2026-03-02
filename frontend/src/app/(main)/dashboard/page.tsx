@@ -87,8 +87,8 @@ export default function NexusDashboard() {
         ticker: trade.ticker,
         type: trade.transactionType,
         amount: trade.amountRange,
-        date: new Date(trade.transactionDate || trade.filedDate || Date.now()).toLocaleDateString(),
-        rawDate: trade.transactionDate || trade.filedDate || new Date().toISOString(),
+        date: new Date(trade.filedDate || trade.transactionDate || Date.now()).toLocaleDateString(),
+        rawDate: trade.filedDate || trade.transactionDate || new Date().toISOString(),
         reliability: 90,
       }));
 

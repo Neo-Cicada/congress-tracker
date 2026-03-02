@@ -152,7 +152,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     const [items, total] = await Promise.all([
       Trade.find(query)
-        .sort({ transactionDate: -1, createdAt: -1 })
+        .sort({ filedDate: -1, transactionDate: -1 })
         .skip(parsedSkip)
         .limit(parsedLimit)
         .lean()
