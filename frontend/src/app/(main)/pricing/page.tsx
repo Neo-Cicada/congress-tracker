@@ -10,7 +10,7 @@ const PLANS = [
   {
     id: "weekly",
     name: "Weekly Access",
-    price: "$9",
+    price: "$2",
     period: "/week",
     icon: Zap,
     color: "cyan",
@@ -24,7 +24,7 @@ const PLANS = [
   {
     id: "monthly",
     name: "Monthly Access",
-    price: "$29",
+    price: "$9.99",
     period: "/month",
     icon: Sparkles,
     color: "cyan",
@@ -39,15 +39,13 @@ const PLANS = [
   {
     id: "yearly",
     name: "Yearly Access",
-    price: "$249",
+    price: "$89.99",
     period: "/year",
     icon: Crown,
     color: "purple",
     features: [
       "Everything in Monthly",
-      "2 Months Free ($290 value)",
-      "API Access (Beta)",
-      "Exclusive Alpha Reports",
+      "3 Months Free ($120 value)",
     ],
     popular: false,
   },
