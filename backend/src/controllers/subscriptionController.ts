@@ -167,18 +167,22 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
         const customData = event.meta?.custom_data;
         const userId = customData?.user_id;
         const attrs = event.data?.attributes;
+        const userEmail = attrs?.user_email || event.data?.attributes?.user_email;
 
-        console.log(`[LS Webhook] Event: ${eventName}, User ID: ${userId}`);
+        console.log(`[LS Webhook] Event: ${eventName}, User ID: ${userId}, Email: ${userEmail}`);
 
-        if (!userId) {
-            console.warn('[LS Webhook] No user_id in custom_data, skipping');
-            res.json({ received: true });
-            return;
+        let user;
+        if (userId) {
+            user = await User.findById(userId);
         }
 
-        const user = await User.findById(userId);
+        if (!user && userEmail) {
+            console.warn(`[LS Webhook] User not found by ID or ID missing, trying email: ${userEmail}`);
+            user = await User.findOne({ email: userEmail });
+        }
+
         if (!user) {
-            console.warn(`[LS Webhook] User not found: ${userId}`);
+            console.warn(`[LS Webhook] User not found by ID or Email. Skipping.`);
             res.json({ received: true });
             return;
         }
