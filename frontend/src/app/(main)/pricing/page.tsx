@@ -84,8 +84,8 @@ export default function PricingPage() {
         return;
       }
 
-      // Redirect to Lemon Squeezy hosted checkout
-      window.location.href = data.checkoutUrl;
+      // Open Lemon Squeezy hosted checkout in a new tab
+      window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
       setError("Something went wrong. Please try again.");
       console.error("Checkout error:", err);

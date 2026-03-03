@@ -39,7 +39,7 @@ app.use(cors({
   credentials: true,
 }));
 // Capture raw body for webhook signature verification
-app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }), (req: any, _res, next) => {
+app.use('/api/subscription/webhook', express.raw({ type: 'application/vnd.api+json' }), (req: any, _res, next) => {
   req.rawBody = req.body;
   // Parse the raw body into JSON for the controller
   if (Buffer.isBuffer(req.body)) {
