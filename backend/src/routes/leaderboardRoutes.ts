@@ -37,6 +37,21 @@ router.get('/party-performance', protect, requireSubscription, async (req, res) 
     }
 });
 
+// GET /api/leaderboard/preview - Public endpoint for dashboard preview
+router.get('/preview', async (req, res) => {
+    try {
+        const leaders = await Politician.find({ 'stats.ytdReturn': { $exists: true } })
+            .sort({ 'stats.ytdReturn': -1 })
+            .limit(10)
+            .select('name party stats photoUrl');
+
+        res.json(leaders);
+    } catch (error) {
+        console.error('Error fetching leaderboard preview:', error);
+        res.status(500).json({ message: 'Error fetching leaderboard preview data' });
+    }
+});
+
 // GET /api/leaderboard - Get top politicians by YTD return
 router.get('/', protect, requireSubscription, async (req, res) => {
     try {

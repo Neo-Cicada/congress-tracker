@@ -74,7 +74,7 @@ export const createCheckout = async (req: AuthRequest, res: Response): Promise<v
             return;
         }
 
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const frontendUrl = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
         const checkoutData = {
             data: {
@@ -130,19 +130,29 @@ const verifyWebhookSignature = (rawBody: Buffer, signature: string): boolean => 
 
     const hmac = crypto.createHmac('sha256', secret);
     const digest = hmac.update(rawBody).digest('hex');
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
+
+    const signatureBuffer = Buffer.from(signature, 'utf8');
+    const digestBuffer = Buffer.from(digest, 'utf8');
+
+    if (signatureBuffer.length !== digestBuffer.length) {
+        return false;
+    }
+
+    return crypto.timingSafeEqual(signatureBuffer, digestBuffer);
 };
 
 export const handleWebhook = async (req: Request, res: Response): Promise<void> => {
     try {
         const signature = req.headers['x-signature'] as string;
         if (!signature) {
+            console.error('[LS Webhook] Missing signature header');
             res.status(400).json({ message: 'Missing signature header' });
             return;
         }
 
         const rawBody = (req as any).rawBody as Buffer;
         if (!rawBody) {
+            console.error('[LS Webhook] Missing raw body. Be sure that Express is parsing the exact Content-Type sent by Lemon Squeezy.');
             res.status(400).json({ message: 'Missing raw body' });
             return;
         }
@@ -245,7 +255,7 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
         res.json({ received: true });
     } catch (error) {
         console.error('[LS Webhook] Error processing webhook:', error);
-        res.status(500).json({ message: 'Webhook processing error' });
+        res.status(500).json({ message: 'Webhook processing error', error: String(error) });
     }
 };
 

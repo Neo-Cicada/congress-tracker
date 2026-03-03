@@ -72,6 +72,13 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Prevent CastError for invalid object IDs
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            res.status(404).json({ message: 'Politician not found' });
+            return;
+        }
+
         const politician = await Politician.findById(id);
 
         if (!politician) {

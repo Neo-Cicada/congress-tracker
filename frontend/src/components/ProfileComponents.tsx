@@ -92,20 +92,32 @@ const SettingsModal = ({ onClose, onLogout }: { onClose: () => void, onLogout: (
     if (action === 'cancel' && !confirm('Are you sure? You\'ll keep access until the billing period ends.')) return;
     setActionLoading(action);
     try {
-      if (action === 'portal') {
-        const res = await fetch(getApiUrl('subscription/portal'), {
-          method: 'POST', headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.portalUrl) window.open(data.portalUrl, '_blank');
-      } else {
-        const res = await fetch(getApiUrl(`subscription/${action}`), {
-          method: 'POST', headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) await refreshSubscription();
+      const res = await fetch(getApiUrl(`subscription/${action}`), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.message || 'Action failed.');
+        return;
       }
-    } catch (err) { console.error(err); }
-    finally { setActionLoading(null); }
+
+      if (action === 'portal') {
+        if (data.portalUrl) {
+          window.open(data.portalUrl, '_blank', 'noopener,noreferrer');
+        } else {
+          alert('Billing portal not available for this account.');
+        }
+      } else {
+        await refreshSubscription();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred. Please try again later.');
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   return (
@@ -246,11 +258,20 @@ export const SubscriptionCard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.message || 'Failed to open billing portal.');
+        return;
+      }
+
       if (data.portalUrl) {
-        window.open(data.portalUrl, '_blank');
+        window.open(data.portalUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('Billing portal not available for this account.');
       }
     } catch (err) {
       console.error('Portal error:', err);
+      alert('An error occurred. Please try again later.');
     } finally {
       setPortalLoading(false);
     }

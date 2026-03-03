@@ -72,27 +72,26 @@ const LEADERS: LeaderboardEntry[] = [
 const Leaderboard = () => {
   const [leaders, setLeaders] = React.useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const { token, isPremium } = useAuth();
+  // Auth is no longer needed since we fetch the public preview
+  // const { token, isPremium } = useAuth();
 
   React.useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        if (isPremium && token) {
-          const data = await fetchWithCache(getApiUrl("leaderboard"), {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          const mapped: LeaderboardEntry[] = data.map((p: any, index: number) => ({
-            rank: index + 1,
-            name: p.name,
-            party: p.party || "I",
-            returns: p.stats?.ytdReturn || 0,
-            topHolding: p.stats?.topHolding || "N/A",
-            id: p._id
-          }));
+        const data = await fetchWithCache(getApiUrl("leaderboard/preview"));
+        
+        const mapped: LeaderboardEntry[] = data.map((p: any, index: number) => ({
+          rank: index + 1,
+          name: p.name,
+          party: p.party || "I",
+          returns: p.stats?.ytdReturn || 0,
+          topHolding: p.stats?.topHolding || "N/A",
+          id: p._id
+        }));
+        
+        if (mapped.length > 0) {
           setLeaders(mapped);
         } else {
-          // Free users: show static preview data
           setLeaders(LEADERS);
         }
       } catch (error) {
@@ -105,7 +104,7 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
-  }, [isPremium, token]);
+  }, []);
 
   if (loading) {
      return (
@@ -145,7 +144,7 @@ const Leaderboard = () => {
       <div className="space-y-8">
         {leaders.map((leader) => (
           <Link
-            href={`/politician/${leader.id || leader.rank}`} // Use ID if available
+            href={leader.id ? `/politician/${leader.id}` : "/leaderboard"}
             key={leader.rank}
             className="relative flex items-center justify-between group/row cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5 p-4 rounded-2xl transition-all"
           >
